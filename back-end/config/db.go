@@ -46,14 +46,16 @@ func InitDB() {
 	DB = db
 	fmt.Println("Database connected!")
 
-	db.AutoMigrate(
+	err = db.AutoMigrate(
 		&models.Pemesan{},
 		&models.Produk{},
+		&models.Pegawai{},
 		&models.Order{},
 		&models.OrderItem{},
-		&models.Pegawai{}, 
-)
-
+	)
+	if err != nil {
+		log.Fatalf("AutoMigrate error: %v", err)
+	}
 
 	fmt.Println("Database migrated!")
 }

@@ -1,17 +1,11 @@
 package models
 
-import (
-	"github.com/google/uuid"
-	"gorm.io/gorm"
-)
-
 type Pemesan struct {
-	IDPemesan uuid.UUID `gorm:"type:char(36);primaryKey" json:"id_pemesan"`
-	Nama      string    `gorm:"type:varchar(100)" json:"nama"`
-	Meja      int       `json:"meja"`
+	IDPemesan string `gorm:"column:id_pemesan;primaryKey;size:20" json:"id_pemesan"`
+	Nama      string `gorm:"column:nama;size:100" json:"nama"`
+	Meja      int    `gorm:"column:meja" json:"meja"`
 }
 
-func (p *Pemesan) BeforeCreate(tx *gorm.DB) (err error) {
-	p.IDPemesan = uuid.New()
-	return
+func (Pemesan) TableName() string {
+	return "Pemesan"
 }

@@ -1,18 +1,11 @@
 package models
 
-import (
-	"github.com/google/uuid"
-	"gorm.io/gorm"
-)
-
 type Pegawai struct {
-	ID       uuid.UUID `gorm:"type:char(36);primaryKey" json:"id"`
-	Username string    `gorm:"unique;not null" json:"username"`
-	Password string    `gorm:"not null" json:"password"`
-	Role     string    `gorm:"default:admin" json:"role"`
+	IDPegawai int    `gorm:"column:id_pegawai;primaryKey;autoIncrement" json:"id_pegawai"`
+	Username  string `gorm:"column:username;size:50;unique;not null" json:"username"`
+	Password  string `gorm:"column:password;size:255;not null" json:"-"`
 }
 
-func (u *Pegawai) BeforeCreate(tx *gorm.DB) (err error) {
-	u.ID = uuid.New()
-	return
+func (Pegawai) TableName() string {
+	return "Pegawai"
 }

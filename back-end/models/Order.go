@@ -1,20 +1,12 @@
 package models
 
-import (
-	"github.com/google/uuid"
-	"gorm.io/gorm"
-)
-
 type Order struct {
-	IDOrder    uuid.UUID `gorm:"type:char(36);primaryKey" json:"id_order"`
-	IDPemesan  uuid.UUID `gorm:"type:char(36)" json:"id_pemesan"`
-	TotalHarga int       `gorm:"default:0" json:"total_harga"`
-	Status     bool      `gorm:"default:false" json:"status"`
-
-	Pemesan Pemesan `gorm:"foreignKey:IDPemesan;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	IDOrder    string `gorm:"column:id_order;primaryKey;size:20" json:"id_order"`
+	IDPemesan  string `gorm:"column:id_pemesan;size:20" json:"id_pemesan"`
+	TotalHarga int    `gorm:"column:total_harga;default:0" json:"total_harga"`
+	Status     bool   `gorm:"column:status;default:false" json:"status"`
 }
 
-func (o *Order) BeforeCreate(tx *gorm.DB) (err error) {
-	o.IDOrder = uuid.New()
-	return
+func (Order) TableName() string {
+	return "Order"
 }

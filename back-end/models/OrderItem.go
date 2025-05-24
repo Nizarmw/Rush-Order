@@ -1,16 +1,13 @@
 package models
 
-import (
-	"github.com/google/uuid"
-)
-
 type OrderItem struct {
-	IDItem   uint      `gorm:"primaryKey;autoIncrement" json:"id_item"`
-	IDOrder  uuid.UUID `gorm:"type:char(36)" json:"id_order"`
-	IDProduk uuid.UUID `gorm:"type:char(36)" json:"id_produk"`
-	Jumlah   int       `json:"jumlah"`
-	Subtotal int       `json:"subtotal"`
+	IDItem   int    `gorm:"column:id_item;primaryKey;autoIncrement" json:"id_item"`
+	IDOrder  string `gorm:"column:id_order;size:20" json:"id_order"`
+	IDProduk string `gorm:"column:id_produk;size:20" json:"id_produk"`
+	Jumlah   int    `gorm:"column:jumlah" json:"jumlah"`
+	Subtotal int    `gorm:"column:subtotal" json:"subtotal"`
+}
 
-	Order  Order  `gorm:"foreignKey:IDOrder;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-	Produk Produk `gorm:"foreignKey:IDProduk;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+func (OrderItem) TableName() string {
+	return "Order_Item"
 }
