@@ -5,7 +5,3 @@ type Produk struct {
 	NamaProduk  string `gorm:"column:nama_produk;size:100" json:"nama_produk"`
 	HargaProduk int    `gorm:"column:harga_produk" json:"harga_produk"`
 }
-
-func (Produk) TableName() string {
-	return "Produk"
-}

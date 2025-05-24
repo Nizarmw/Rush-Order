@@ -5,7 +5,3 @@ type Pemesan struct {
 	Nama      string `gorm:"column:nama;size:100" json:"nama"`
 	Meja      int    `gorm:"column:meja" json:"meja"`
 }
-
-func (Pemesan) TableName() string {
-	return "Pemesan"
-}

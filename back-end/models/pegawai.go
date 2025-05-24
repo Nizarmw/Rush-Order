@@ -5,7 +5,3 @@ type Pegawai struct {
 	Username  string `gorm:"column:username;size:50;unique;not null" json:"username"`
 	Password  string `gorm:"column:password;size:255;not null" json:"-"`
 }
-
-func (Pegawai) TableName() string {
-	return "Pegawai"
-}

@@ -6,7 +6,3 @@ type Order struct {
 	TotalHarga int    `gorm:"column:total_harga;default:0" json:"total_harga"`
 	Status     bool   `gorm:"column:status;default:false" json:"status"`
 }
-
-func (Order) TableName() string {
-	return "Order"
-}

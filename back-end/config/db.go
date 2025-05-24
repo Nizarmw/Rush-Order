@@ -47,11 +47,9 @@ func InitDB() {
 	fmt.Println("Database connected!")
 
 	err = db.AutoMigrate(
-		&models.Pemesan{},
-		&models.Produk{},
+		&models.Pemesan{}, &models.Produk{},
+		&models.Order{}, &models.OrderItem{},
 		&models.Pegawai{},
-		&models.Order{},
-		&models.OrderItem{},
 	)
 	if err != nil {
 		log.Fatalf("AutoMigrate error: %v", err)
