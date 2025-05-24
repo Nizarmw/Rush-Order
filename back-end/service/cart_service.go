@@ -2,91 +2,124 @@ package service
 
 import (
 	"RushOrder/session"
+	"encoding/json"
 	"errors"
+	"net/http"
 )
 
-func (s *SessionManager) AddToCart(sessionID, IDProduk, NamaProduk string, Jumlah, Harga int) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	sess, ok := s.session[sessionID]
-	if !ok {
-		return errors.New("session not found")
+func AddToCart(w http.ResponseWriter, r *http.Request, item session.CartItem) error {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return err
 	}
 
-	sess.Cart[IDProduk] = session.CartItem{
-		IDProduk:   IDProduk,
-		NamaProduk: NamaProduk,
-		Jumlah:     Jumlah,
-		Harga:      Harga,
-		Subtotal:   Jumlah * Harga,
+	sessionData, ok := sess.Values[SessionKey]
+	if !ok {
+		return errors.New("session tidak ditemukan")
+	}
+
+	var customer session.CustomerSession
+	if err := json.Unmarshal([]byte(sessionData.(string)), &customer); err != nil {
+		return err
+	}
+
+	if existingItem, exists := customer.Cart[item.IDProduk]; exists {
+		existingItem.Jumlah += item.Jumlah
+		existingItem.Subtotal += item.Harga * item.Jumlah
+		customer.Cart[item.IDProduk] = existingItem
+	} else {
+		item.Subtotal = item.Harga * item.Jumlah
+		customer.Cart[item.IDProduk] = item
 	}
 
 	total := 0
-	for _, item := range sess.Cart {
-		total += item.Subtotal
+	for _, val := range customer.Cart {
+		total += val.Subtotal
 	}
-	sess.Total = total
+	customer.Total = total
 
-	return nil
+	jsonData, err := json.Marshal(customer)
+	if err != nil {
+		return err
+	}
+	sess.Values[SessionKey] = string(jsonData)
+	return sess.Save(r, w)
 }
 
-func (s *SessionManager) UpdateCartItem(sessionID, IDProduk string, Jumlah int) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func GetCart(r *http.Request) (map[string]session.CartItem, int, error) {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return nil, 0, err
+	}
 
-	sess, ok := s.session[sessionID]
+	sessionData, ok := sess.Values[SessionKey]
 	if !ok {
-		return errors.New("session not found")
+		return nil, 0, errors.New("session tidak ditemukan")
 	}
 
-	item, exists := sess.Cart[IDProduk]
-	if !exists {
-		return errors.New("item not found in cart")
+	var customer session.CustomerSession
+	if err := json.Unmarshal([]byte(sessionData.(string)), &customer); err != nil {
+		return nil, 0, err
 	}
-	item.Jumlah = Jumlah
-	item.Subtotal = Jumlah * item.Harga
-	sess.Cart[IDProduk] = item
+
+	return customer.Cart, customer.Total, nil
+}
+
+func RemoveFromCart(w http.ResponseWriter, r *http.Request, idProduk string) error {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return err
+	}
+
+	sessionData, ok := sess.Values[SessionKey]
+	if !ok {
+		return errors.New("session tidak ditemukan")
+	}
+
+	var customer session.CustomerSession
+	if err := json.Unmarshal([]byte(sessionData.(string)), &customer); err != nil {
+		return err
+	}
+
+	delete(customer.Cart, idProduk)
 
 	total := 0
-	for _, cartItem := range sess.Cart {
-		total += cartItem.Subtotal
+	for _, val := range customer.Cart {
+		total += val.Subtotal
 	}
-	sess.Total = total
-	return nil
+	customer.Total = total
+
+	jsonData, err := json.Marshal(customer)
+	if err != nil {
+		return err
+	}
+	sess.Values[SessionKey] = string(jsonData)
+	return sess.Save(r, w)
 }
 
-func (s *SessionManager) RemoveFromCart(sessionID, IDProduk string) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func ClearCart(w http.ResponseWriter, r *http.Request) error {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return err
+	}
 
-	sess, ok := s.session[sessionID]
+	sessionData, ok := sess.Values[SessionKey]
 	if !ok {
-		return errors.New("session not found")
+		return errors.New("session tidak ditemukan")
 	}
 
-	delete(sess.Cart, IDProduk)
-
-	total := 0
-	for _, item := range sess.Cart {
-		total += item.Subtotal
-	}
-	sess.Total = total
-
-	return nil
-}
-
-func (s *SessionManager) ClearCart(sessionID string) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	sess, ok := s.session[sessionID]
-	if !ok {
-		return errors.New("session not found")
+	var customer session.CustomerSession
+	if err := json.Unmarshal([]byte(sessionData.(string)), &customer); err != nil {
+		return err
 	}
 
-	sess.Cart = make(map[string]session.CartItem)
-	sess.Total = 0
+	customer.Cart = make(map[string]session.CartItem)
+	customer.Total = 0
 
-	return nil
+	jsonData, err := json.Marshal(customer)
+	if err != nil {
+		return err
+	}
+	sess.Values[SessionKey] = string(jsonData)
+	return sess.Save(r, w)
 }

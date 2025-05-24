@@ -1,15 +1,11 @@
 package session
 
-import "time"
-
 type CustomerSession struct {
-	ID        string              `json:"id"`
-	Nama      string              `json:"nama"`
-	Meja      int                 `json:"meja"`
-	Cart      map[string]CartItem `json:"cart"`
-	Total     int                 `json:"total"`
-	CreatedAt time.Time           `json:"created_at"`
-	ExpiredAt time.Time           `json:"expired_at"`
+	ID    string              `json:"id"`
+	Nama  string              `json:"nama"`
+	Meja  int                 `json:"meja"`
+	Cart  map[string]CartItem `json:"cart"`
+	Total int                 `json:"total"`
 }
 
 type CartItem struct {

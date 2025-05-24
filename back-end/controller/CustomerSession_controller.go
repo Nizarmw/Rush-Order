@@ -1,59 +1,54 @@
-package controllers
+package controller
 
 import (
-	"encoding/json"
+	"RushOrder/service"
 	"net/http"
-	"strconv"
 
-	"RushOrder/session"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
-func CustomerLoginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	nama := r.FormValue("nama")
-	mejaStr := r.FormValue("meja")
-	meja, err := strconv.Atoi(mejaStr)
-	if err != nil {
-		http.Error(w, "Nomor meja tidak valid", http.StatusBadRequest)
-		return
-	}
-
-	err = session.CreateSession(w, r, nama, meja)
-	if err != nil {
-		http.Error(w, "Gagal membuat sesi", http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, "/menu", http.StatusSeeOther)
+type LoginRequest struct {
+	Nama string `json:"nama" binding:"required"`
+	Meja int    `json:"meja" binding:"required,gt=0"`
 }
 
-func GetCustomerSessionHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func CustomerLoginHandler(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "nama dan meja wajib diisi"})
 		return
 	}
-	customerSession, err := session.GetSession(r)
+
+	id := uuid.New().String()
+	err := service.CreateSession(c.Writer, c.Request, id, req.Nama, req.Meja)
 	if err != nil {
-		http.Error(w, "Gagal mendapatkan sesi", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal membuat sesi"})
 		return
 	}
-	if customerSession == nil {
-		http.Error(w, "Sesi tidak ditemukan", http.StatusNotFound)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(customerSession)
+
+	c.JSON(http.StatusOK, gin.H{"message": "login berhasil"})
 }
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func GetCustomerSessionHandler(c *gin.Context) {
+	customer, err := service.GetSession(c.Request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal ambil sesi"})
 		return
 	}
-	session.ClearCustomerSession(r, w)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	if customer == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "session tidak ditemukan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, customer)
+}
+
+func LogoutHandler(c *gin.Context) {
+	err := service.ClearCustomerSession(c.Writer, c.Request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal logout"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "logout berhasil"})
 }

@@ -2,72 +2,80 @@ package service
 
 import (
 	"RushOrder/session"
-	"errors"
-	"sync"
-	"time"
+	"encoding/json"
+	"net/http"
+
+	"github.com/gorilla/sessions"
 )
 
-type SessionManager struct {
-	session map[string]*session.CustomerSession
-	mutex   sync.Mutex
-}
+var (
+	Store *sessions.CookieStore
+)
 
-func NewSessionManager() *SessionManager {
-	return &SessionManager{
-		session: make(map[string]*session.CustomerSession),
+const (
+	SessionName   = "customer_session"
+	SessionMaxAge = 3600 * 2
+	SessionKey    = "customer_data"
+)
+
+func InitSessionStore(secretKey string) {
+	Store = sessions.NewCookieStore([]byte(secretKey))
+	Store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   SessionMaxAge,
+		HttpOnly: true,
+		Secure:   false,
 	}
 }
 
-func (s *SessionManager) CreateSession(id, nama string, meja int) *session.CustomerSession {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	newSession := &session.CustomerSession{
-		ID:        id,
-		Nama:      nama,
-		Meja:      meja,
-		Cart:      make(map[string]session.CartItem),
-		Total:     0,
-		CreatedAt: time.Now(),
-		ExpiredAt: time.Now().Add(24 * time.Hour),
+func CreateSession(w http.ResponseWriter, r *http.Request, id, nama string, meja int) error {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return err
 	}
-	s.session[id] = newSession
 
-	return newSession
+	customerData := session.CustomerSession{
+		ID:    id,
+		Nama:  nama,
+		Meja:  meja,
+		Cart:  make(map[string]session.CartItem),
+		Total: 0,
+	}
+
+	jsonData, err := json.Marshal(customerData)
+	if err != nil {
+		return err
+	}
+
+	sess.Values[SessionKey] = string(jsonData)
+	return sess.Save(r, w)
 }
 
-func (s *SessionManager) GetSession(id string) (*session.CustomerSession, bool) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func GetSession(r *http.Request) (*session.CustomerSession, error) {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return nil, err
+	}
 
-	sess, ok := s.session[id]
+	sessionData, ok := sess.Values[SessionKey]
 	if !ok {
-		return nil, false
+		return nil, nil
 	}
-	if time.Now().After(sess.ExpiredAt) {
-		delete(s.session, id)
-		return nil, false
+
+	var customerData session.CustomerSession
+	err = json.Unmarshal([]byte(sessionData.(string)), &customerData)
+	if err != nil {
+		return nil, err
 	}
-	return sess, true
+
+	return &customerData, nil
 }
-
-func (s *SessionManager) UpdateSession(id, nama string, meja int) (*session.CustomerSession, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	sess, ok := s.session[id]
-	if !ok {
-		return nil, errors.New("session not found")
+func ClearCustomerSession(w http.ResponseWriter, r *http.Request) error {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return err
 	}
-	sess.Nama = nama
-	sess.Meja = meja
-	return sess, nil
-}
 
-func (s *SessionManager) DeleteSession(id string) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	delete(s.session, id)
-	return nil
+	delete(sess.Values, SessionKey)
+	return sess.Save(r, w)
 }
