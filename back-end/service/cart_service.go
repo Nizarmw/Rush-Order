@@ -25,7 +25,7 @@ func AddToCart(w http.ResponseWriter, r *http.Request, item session.CartItem) er
 
 	if existingItem, exists := customer.Cart[item.IDProduk]; exists {
 		existingItem.Jumlah += item.Jumlah
-		existingItem.Subtotal += item.Harga * item.Jumlah
+		existingItem.Subtotal = existingItem.Harga * existingItem.Jumlah
 		customer.Cart[item.IDProduk] = existingItem
 	} else {
 		item.Subtotal = item.Harga * item.Jumlah
@@ -116,6 +116,48 @@ func ClearCart(w http.ResponseWriter, r *http.Request) error {
 	customer.Cart = make(map[string]session.CartItem)
 	customer.Total = 0
 
+	jsonData, err := json.Marshal(customer)
+	if err != nil {
+		return err
+	}
+	sess.Values[SessionKey] = string(jsonData)
+	return sess.Save(r, w)
+}
+
+func UpdateCartItemHandler(w http.ResponseWriter, r *http.Request, idProduk string, jumlah int) error {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return err
+	}
+
+	sessionData, ok := sess.Values[SessionKey]
+	if !ok {
+		return errors.New("session tidak ditemukan")
+	}
+
+	var customer session.CustomerSession
+	if err := json.Unmarshal([]byte(sessionData.(string)), &customer); err != nil {
+		return err
+	}
+
+	item, exists := customer.Cart[idProduk]
+	if !exists {
+		return errors.New("item tidak ditemukan di keranjang")
+	}
+
+	if jumlah <= 0 {
+		delete(customer.Cart, idProduk)
+	} else {
+		item.Jumlah = jumlah
+		item.Subtotal = item.Harga * item.Jumlah
+		customer.Cart[idProduk] = item
+	}
+
+	total := 0
+	for _, val := range customer.Cart {
+		total += val.Subtotal
+	}
+	customer.Total = total
 	jsonData, err := json.Marshal(customer)
 	if err != nil {
 		return err

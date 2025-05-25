@@ -10,8 +10,9 @@ func SetupCartRoutes(r *gin.Engine) {
 	CartRoutes := r.Group("/api/carts")
 	{
 		CartRoutes.GET("/", controller.GetCartHandler)
-		CartRoutes.POST("/:idpemesan", controller.AddToCartHandler)
+		CartRoutes.POST("/", controller.AddToCartHandler)
+		CartRoutes.PUT("/", controller.UpdateCartItemHandler)
+		CartRoutes.DELETE("/", controller.RemoveFromCartHandler)
 		CartRoutes.DELETE("/clear", controller.ClearCartHandler)
-		CartRoutes.DELETE("/:id", controller.RemoveFromCartHandler)
 	}
 }

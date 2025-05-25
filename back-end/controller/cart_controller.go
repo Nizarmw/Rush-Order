@@ -80,3 +80,35 @@ func ClearCartHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "cart dikosongkan"})
 }
+
+type UpdateCartItemRequest struct {
+	IDProduk string `json:"id_produk" binding:"required"`
+	Jumlah   int    `json:"jumlah" binding:"required,gt=0"`
+}
+
+func UpdateCartItemHandler(c *gin.Context) {
+	var req UpdateCartItemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	err := service.UpdateCartItemHandler(c.Writer, c.Request, req.IDProduk, req.Jumlah)
+	if err != nil {
+		if err.Error() == "session tidak ditemukan" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "session tidak ditemukan"})
+			return
+		}
+		if err.Error() == "produk tidak ditemukan di cart" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "produk tidak ditemukan di cart"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal update item"})
+		return
+	}
+	if req.Jumlah <= 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "item dihapus dari cart"})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"message": "item diperbarui di cart"})
+	}
+}
