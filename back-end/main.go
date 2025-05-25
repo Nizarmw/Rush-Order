@@ -33,5 +33,6 @@ func main() {
 
 	routes.SetupSessionRoutes(r)
 	routes.SetupCartRoutes(r)
+	routes.SetupAdminRoutes(r, config.DB)
 	r.Run(":8080")
 }
