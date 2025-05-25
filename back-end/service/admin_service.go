@@ -6,13 +6,14 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type AdminSession struct {
 	IDPegawai int    `json:"id_pegawai"`
-	Nama      string `json:"nama"`
+	Nama      string `json:"username"`
 }
 
 const (
@@ -21,8 +22,14 @@ const (
 	SessionExpiry    = 3600
 )
 
-func InitAdminSession() {
-	Store.Options.MaxAge = SessionExpiry
+func InitAdminSession(secretKey string) {
+	Store = sessions.NewCookieStore([]byte(secretKey))
+	Store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   SessionExpiry,
+		HttpOnly: true,
+		Secure:   false,
+	}
 }
 
 func LoginAdmin(c *gin.Context, username, password string, db *gorm.DB) (*AdminSession, error) {

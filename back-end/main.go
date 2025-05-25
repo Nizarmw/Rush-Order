@@ -20,7 +20,7 @@ func main() {
 	config.InitDB()
 
 	service.InitSessionStore(os.Getenv("SESSION_KEY"))
-
+	service.InitAdminSession(os.Getenv("SESSION_KEY"))
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
