@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RushOrder - Digital Menu</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-screen hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Customer Login Page -->
+    <div id="loginPage" class="page active">
+        <div class="container">
+            <div class="welcome-card">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <h1>RushOrder</h1>
+                </div>
+                <p class="welcome-text">Selamat datang! Silakan masukkan data Anda untuk memulai pemesanan</p>
+                
+                <form id="customerForm">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="nama" placeholder="Nama Pemesan" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-chair"></i>
+                        <input type="number" id="meja" placeholder="Nomor Meja" required min="1">
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-arrow-right"></i>
+                        Mulai Memesan
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>RushOrder - Digital Menu</title>
+        <link rel="stylesheet" href="css/style.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body>
+
+        <!-- Loading Screen -->
+        <div id="loading" class="loading-screen hidden">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <!-- Menu Page -->
+        <div id="menuPage" class="page active">
+            <header class="header">
+                <div class="container">
+                    <div class="header-content">
+                        <div class="customer-info">
+                            <i class="fas fa-user"></i>
+                            <span id="customerName"></span>
+                            <i class="fas fa-chair"></i>
+                            <span>Meja <span id="tableNumber"></span></span>
+                        </div>
+                        <div class="cart-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span id="cartCount" class="cart-count">0</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="container">
+                <div class="menu-categories">
+                    <button class="category-btn active" data-category="all">Semua Menu</button>
+                    <button class="category-btn" data-category="makanan">Makanan</button>
+                    <button class="category-btn" data-category="minuman">Minuman</button>
+                    <button class="category-btn" data-category="snack">Snack</button>
+                </div>
+
+                <div id="menuGrid" class="menu-grid">
+                    <!-- Menu items will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Sidebar -->
+        <div id="cartSidebar" class="cart-sidebar">
+            <div class="cart-header">
+                <h3><i class="fas fa-shopping-cart"></i> Keranjang</h3>
+                <button class="close-cart">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="cartItems" class="cart-items">
+                <!-- Cart items will be loaded here -->
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <strong>Total: Rp <span id="cartTotal">0</span></strong>
+                </div>
+                <button id="checkoutBtn" class="btn-primary">
+                    <i class="fas fa-credit-card"></i>
+                    Checkout
+                </button>
+            </div>
+        </div>
+
+        <!-- Checkout Page -->
+        <div id="checkoutPage" class="page">
+            <div class="container">
+                <div class="checkout-card">
+                    <h2><i class="fas fa-receipt"></i> Konfirmasi Pesanan</h2>
+
+                    <div class="order-summary">
+                        <h3>Detail Pesanan</h3>
+                        <div class="customer-details">
+                            <p><strong>Nama:</strong> <span id="checkoutName"></span></p>
+                            <p><strong>Meja:</strong> <span id="checkoutTable"></span></p>
+                        </div>
+
+                        <div id="checkoutItems" class="checkout-items">
+                            <!-- Order items will be displayed here -->
+                        </div>
+
+                        <div class="total-section">
+                            <h3>Total: Rp <span id="checkoutTotal">0</span></h3>
+                        </div>
+                    </div>
+
+                    <div class="payment-section">
+                        <h3>Metode Pembayaran</h3>
+                        <div class="payment-methods">
+                            <label class="payment-option">
+                                <input type="radio" name="payment" value="card" checked>
+                                <span class="checkmark"></span>
+                                <i class="fas fa-credit-card"></i>
+                                Kartu Debit/Kredit
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment" value="ewallet">
+                                <span class="checkmark"></span>
+                                <i class="fas fa-mobile-alt"></i>
+                                E-Wallet
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="checkout-actions">
+                        <button class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            Kembali
+                        </button>
+                        <button id="payBtn" class="btn-primary">
+                            <i class="fas fa-credit-card"></i>
+                            Bayar Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Page -->
+        <div id="successPage" class="page">
+            <div class="container">
+                <div class="success-card">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2>Pesanan Berhasil!</h2>
+                    <p>Terima kasih atas pesanan Anda. Mohon tunggu, makanan akan segera disiapkan.</p>
+
+                    <div class="order-receipt">
+                        <h3>Struk Digital</h3>
+                        <div id="receiptContent">
+                            <!-- Receipt content will be generated here -->
+                        </div>
+                    </div>
+
+                    <div class="success-actions">
+                        <button class="btn-secondary">
+                            <i class="fas fa-download"></i>
+                            Download Struk
+                        </button>
+                        <button class="btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Pesan Lagi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay -->
+        <div id="overlay" class="overlay"></div>
+    </body>
+</html>

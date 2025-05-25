@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RushOrder - Admin Dashboard</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/admin-style.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-screen">
+        <div class="spinner"></div>
+        <p>Memuat dashboard admin...</p>
+    </div>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="page active">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="admin-logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <h1>RushOrder Admin</h1>
+                    <p>Dashboard Pegawai Restoran</p>
+                </div>
+                
+                <form id="adminLoginForm">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" placeholder="Username" required autocomplete="username">
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 20px;">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login ke Dashboard
+                    </button>
+                </form>
+                
+                <div class="demo-credentials">
+                    <small>
+                        <strong>Demo Credentials:</strong><br>
+                        Username: <code>admin</code><br>
+                        Password: <code>password123</code>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="page">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="admin-info">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Selamat datang, <strong id="adminName">Admin</strong></span>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <button class="btn-refresh" onclick="adminApp.refreshOrders()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <button class="btn-logout" onclick="adminApp.logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Statistics Cards -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pendingCount">0</h3>
+                        <p>Pesanan Menunggu</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon completed">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="completedCount">0</h3>
+                        <p>Pesanan Selesai</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon revenue">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Rp <span id="totalRevenue">0</span></h3>
+                        <p>Total Pendapatan</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon orders">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalOrders">0</h3>
+                        <p>Total Pesanan</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab Navigation -->
+            <nav class="tab-navigation">
+                <button class="tab-btn active" data-tab="pending" onclick="adminApp.switchTab('pending')">
+                    <i class="fas fa-clock"></i>
+                    Pesanan Menunggu
+                    <span class="tab-badge" id="pendingBadge">0</span>
+                </button>
+                <button class="tab-btn" data-tab="completed" onclick="adminApp.switchTab('completed')">
+                    <i class="fas fa-check-circle"></i>
+                    Pesanan Selesai
+                    <span class="tab-badge" id="completedBadge">0</span>
+                </button>
+            </nav>
+
+            <!-- Tab Content -->
+            <section class="tab-content active" id="pendingTab">
+                <div class="orders-header">
+                    <h2>
+                        <i class="fas fa-clock"></i>
+                        Pesanan Menunggu Diproses
+                    </h2>
+                    <p>Berikut adalah daftar pesanan yang belum selesai diproses. Klik "Tandai Selesai" setelah makanan diantar ke meja pelanggan.</p>
+                </div>
+                
+                <div class="orders-grid" id="pendingOrders">
+                    <!-- Pending orders will be dynamically loaded here -->
+                </div>
+            </section>
+
+            <section class="tab-content" id="completedTab">
+                <div class="orders-header">
+                    <h2>
+                        <i class="fas fa-check-circle"></i>
+                        Pesanan Yang Sudah Selesai
+                    </h2>
+                    <p>Riwayat pesanan yang sudah berhasil dilayani hari ini. Data ini dapat digunakan untuk laporan harian.</p>
+                </div>
+                
+                <div class="orders-grid" id="completedOrders">
+                    <!-- Completed orders will be dynamically loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fas fa-receipt"></i>
+                    Detail Pesanan
+                </h3>
+                <button class="close-modal" onclick="adminApp.closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body" id="orderDetailContent">
+                <!-- Order details will be dynamically loaded here -->
+            </div>
+            
+            <div class="modal-footer" id="orderModalFooter">
+                <!-- Action buttons will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Page -->
+    <div id="successPage" class="page">
+        <div class="container">
+            <div class="success-card">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Pesanan Berhasil!</h2>
+                <p>Terima kasih atas pesanan Anda. Mohon tunggu, makanan akan segera disiapkan.</p>
+                
+                <div class="order-receipt">
+                    <h3>Struk Digital</h3>
+                    <div id="receiptContent">
+                        <!-- Receipt content will be generated here -->
+                    </div>
+                </div>
+
+                <div class="success-actions">
+                    <button class="btn-secondary" onclick="downloadReceipt()">
+                        <i class="fas fa-download"></i>
+                        Download Struk
+                    </button>
+                    <button class="btn-primary" onclick="newOrder()">
+                        <i class="fas fa-plus"></i>
+                        Pesan Lagi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- Notification Sounds -->
+    <audio id="notificationSound" preload="auto">
+        <source src="../assets/sounds/notification.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="successSound" preload="auto">
+        <source src="../assets/sounds/success.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- JavaScript -->
+    <script src="../js/admin-app.js"></script>
+</body>
+</html>
