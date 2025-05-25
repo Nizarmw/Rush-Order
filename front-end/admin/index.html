@@ -16,51 +16,13 @@
 </head>
 <body>
     <!-- Loading Screen -->
-    <div id="loading" class="loading-screen">
+    <div id="loading" class="loading-screen hidden">
         <div class="spinner"></div>
         <p>Memuat dashboard admin...</p>
     </div>
 
-    <!-- Login Page -->
-    <div id="loginPage" class="page active">
-        <div class="login-container">
-            <div class="login-card">
-                <div class="admin-logo">
-                    <i class="fas fa-shield-alt"></i>
-                    <h1>RushOrder Admin</h1>
-                    <p>Dashboard Pegawai Restoran</p>
-                </div>
-                
-                <form id="adminLoginForm">
-                    <div class="input-group">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="username" placeholder="Username" required autocomplete="username">
-                    </div>
-                    
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
-                    </div>
-                    
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 20px;">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Login ke Dashboard
-                    </button>
-                </form>
-                
-                <div class="demo-credentials">
-                    <small>
-                        <strong>Demo Credentials:</strong><br>
-                        Username: <code>admin</code><br>
-                        Password: <code>password123</code>
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Dashboard Page -->
-    <div id="dashboardPage" class="page">
+    <div id="dashboardPage" class="page active">
         <!-- Header -->
         <header class="admin-header">
             <div class="container">
@@ -71,11 +33,11 @@
                     </div>
                     
                     <div class="header-actions">
-                        <button class="btn-refresh" onclick="adminApp.refreshOrders()">
+                        <button class="btn-refresh">
                             <i class="fas fa-sync-alt"></i>
                             Refresh
                         </button>
-                        <button class="btn-logout" onclick="adminApp.logout()">
+                        <button class="btn-logout">
                             <i class="fas fa-sign-out-alt"></i>
                             Logout
                         </button>
@@ -130,12 +92,12 @@
 
             <!-- Tab Navigation -->
             <nav class="tab-navigation">
-                <button class="tab-btn active" data-tab="pending" onclick="adminApp.switchTab('pending')">
+                <button class="tab-btn active" data-tab="pending">
                     <i class="fas fa-clock"></i>
                     Pesanan Menunggu
                     <span class="tab-badge" id="pendingBadge">0</span>
                 </button>
-                <button class="tab-btn" data-tab="completed" onclick="adminApp.switchTab('completed')">
+                <button class="tab-btn" data-tab="completed">
                     <i class="fas fa-check-circle"></i>
                     Pesanan Selesai
                     <span class="tab-badge" id="completedBadge">0</span>
@@ -181,7 +143,7 @@
                     <i class="fas fa-receipt"></i>
                     Detail Pesanan
                 </h3>
-                <button class="close-modal" onclick="adminApp.closeModal()">
+                <button class="close-modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -214,11 +176,11 @@
                 </div>
 
                 <div class="success-actions">
-                    <button class="btn-secondary" onclick="downloadReceipt()">
+                    <button class="btn-secondary">
                         <i class="fas fa-download"></i>
                         Download Struk
                     </button>
-                    <button class="btn-primary" onclick="newOrder()">
+                    <button class="btn-primary">
                         <i class="fas fa-plus"></i>
                         Pesan Lagi
                     </button>
@@ -239,6 +201,6 @@
     </audio>
 
     <!-- JavaScript -->
-    <script src="../js/admin-app.js"></script>
+    <script src="../js/app-admin.js"></script>
 </body>
 </html>

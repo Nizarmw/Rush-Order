@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | Login</title>
+  <link rel="stylesheet" href="../css/admin-style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+  <div id="loading" class="loading-screen hidden">
+    <div class="spinner"></div>
+    <p>Memuat dashboard admin...</p>
+  </div>
+
+  <!-- Login Page -->
+  <div id="loginPage" class="page active">
+    <div class="login-container">
+      <div class="login-card">
+        <div class="admin-logo">
+          <i class="fas fa-shield-alt"></i>
+          <h1>RushOrder Admin</h1>
+          <p>Dashboard Pegawai Restoran</p>
+        </div>
+
+        <form id="adminLoginForm">
+          <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" id="username" placeholder="Username" required autocomplete="username">
+          </div>
+
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn-primary" style="width: 100%; margin-top: 20px;">
+            <i class="fas fa-sign-in-alt"></i>
+            Login ke Dashboard
+          </button>
+        </form>
+
+        <div class="demo-credentials">
+          <small>
+            <strong>Demo Credentials:</strong><br>
+            Username: <code>admin</code><br>
+            Password: <code>password123</code>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/app-admin.js"></script>
+</body>
+</html>
