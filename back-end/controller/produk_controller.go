@@ -13,7 +13,7 @@ import (
 )
 
 func CreateProdukHandler(c *gin.Context) {
-	idProduk := c.Param("id_produk")
+	idProduk := c.PostForm("id_produk")
 	namaProduk := c.PostForm("nama_produk")
 	deskripsi := c.PostForm("deskripsi")
 	hargaProdukStr := c.PostForm("harga_produk")
