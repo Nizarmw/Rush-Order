@@ -12,9 +12,9 @@ func SetupAdminRoutes(r *gin.Engine, db *gorm.DB) {
 	admin := r.Group("/api/admin")
 	admin.POST("/login", controller.AdminLoginHandler(db))
 	admin.POST("/register", controller.AdminRegisterHandler(db))
-
+    admin.POST("/logout", controller.AdminLogoutHandler())
 	admin.Use(middleware.AdminAuthMiddleware(db))
-	admin.POST("/logout", controller.AdminLogoutHandler())
+
 	// 	admin.GET("/orders", controller.AdminGetOrdersHandler())
 
 }

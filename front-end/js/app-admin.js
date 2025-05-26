@@ -1,8 +1,8 @@
-// LOGIN ADMIN
+// LOGIN
 
-const loginForm = document.getElementById("adminLoginForm");
-if (loginForm) {
-    loginForm.addEventListener("submit", function (e) {
+if (window.location.pathname.endsWith('login.html')) {
+    const loginForm = document.getElementById("adminLoginForm");
+    loginForm.addEventListener("submit", function(e) {
         e.preventDefault();
 
         const username = document.getElementById("username").value;
@@ -19,45 +19,59 @@ if (loginForm) {
             })
         })
 
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Gagal login")
-                }
-                return response.json();
-            })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Gagal login")
+            }
+            return response.json();
+        })
 
             .then(data => {
                 console.log("Login berhasil", data);
                 sessionStorage.setItem("user-admin", JSON.stringify(data));
 
-                window.location.href = "index.html";
+                window.location.href="index.html";
             })
-            .catch(error => {
-                console.log(error);
-                alert('Login gagal: ' + error.message);
-            })
+        .catch(error => {
+            console.log(error);
+            alert('Login gagal: ' + error.message);
+        })
     })
-}
+    }
 
-document.getElementById("btn-logout").addEventListener("click", function (e) {
-    e.preventDefault();
+if (window.location.pathname.endsWith('index.html')) {
+    document.getElementById("btn-logout").addEventListener("click", function (e) {
+        e.preventDefault();
 
-    fetch("http://localhost:8080/api/admin/logout", {
-        method: "POST",
-        credentials: "include" // <--- INI WAJIB supaya cookie session ikut dikirim
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Logout gagal");
+        // (Opsional) Panggil endpoint logout backend
+        fetch("http://localhost:8080/api/admin/logout", {
+            method: "POST",
+            // Tidak perlu credentials karena tidak pakai cookie
+            headers: {
+                "Content-Type": "application/json"
             }
-            // Bersihkan sessionStorage
-            sessionStorage.removeItem("user-admin");
+        })
 
-            // Arahkan kembali ke halaman login
-            window.location.href = "login.html";
+        .then(response => {
+            if (response.ok) {
+                console.log("Logout berhasil");
+                // Redirect ke login
+                window.location.href = "login.html";
+            } else {
+                return response.json().then(data => {
+                    console.error("Logout gagal:", data.error);
+                });
+            }
         })
         .catch(error => {
-            console.error("Gagal logout:", error);
-            alert("Logout gagal: " + error.message);
+            console.log("Error logout:", error);
         });
-});
+    });
+
+    window.onload = function () {
+        const sess = sessionStorage.getItem("user-admin");
+        if (!sess) {
+            window.location.href = "login.html";
+        }
+    }
+}
