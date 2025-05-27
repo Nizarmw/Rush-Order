@@ -112,3 +112,24 @@ func UpdateCartItemHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "item diperbarui di cart"})
 	}
 }
+
+// CheckoutCartHandler handles the checkout process to convert cart to order
+func CheckoutCartHandler(c *gin.Context) {
+	orderID, err := service.CheckoutCart(c.Writer, c.Request)
+	if err != nil {
+		switch err.Error() {
+		case "session tidak ditemukan":
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "session tidak ditemukan"})
+		case "keranjang kosong":
+			c.JSON(http.StatusBadRequest, gin.H{"error": "keranjang kosong"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal checkout"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "checkout berhasil",
+		"order_id": orderID,
+	})
+}

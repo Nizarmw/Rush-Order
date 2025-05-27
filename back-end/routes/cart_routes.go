@@ -14,5 +14,6 @@ func SetupCartRoutes(r *gin.Engine) {
 		CartRoutes.PUT("/", controller.UpdateCartItemHandler)
 		CartRoutes.DELETE("/", controller.RemoveFromCartHandler)
 		CartRoutes.DELETE("/clear", controller.ClearCartHandler)
+		CartRoutes.POST("/checkout", controller.CheckoutCartHandler) // Add checkout endpoint
 	}
 }

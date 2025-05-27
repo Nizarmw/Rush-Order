@@ -1,10 +1,14 @@
 package service
 
 import (
+	"RushOrder/config"
+	"RushOrder/models"
 	"RushOrder/session"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 )
 
 func AddToCart(w http.ResponseWriter, r *http.Request, item session.CartItem) error {
@@ -164,4 +168,79 @@ func UpdateCartItemHandler(w http.ResponseWriter, r *http.Request, idProduk stri
 	}
 	sess.Values[SessionKey] = string(jsonData)
 	return sess.Save(r, w)
+}
+
+// CheckoutCart converts the cart items to an order and saves it to the database
+func CheckoutCart(w http.ResponseWriter, r *http.Request) (string, error) {
+	sess, err := Store.Get(r, SessionName)
+	if err != nil {
+		return "", err
+	}
+
+	sessionData, ok := sess.Values[SessionKey]
+	if !ok {
+		return "", errors.New("session tidak ditemukan")
+	}
+
+	var customer session.CustomerSession
+	if err := json.Unmarshal([]byte(sessionData.(string)), &customer); err != nil {
+		return "", err
+	}
+
+	// Check if cart is empty
+	if len(customer.Cart) == 0 {
+		return "", errors.New("keranjang kosong")
+	}
+
+	// Generate order ID (you can replace this with your own ID generation logic)
+	orderID := fmt.Sprintf("ORD%d", time.Now().Unix())
+
+	// Create order
+	order := models.Order{
+		IDOrder:    orderID,
+		IDPemesan:  customer.ID,
+		TotalHarga: customer.Total,
+		Status:     false,
+		Items:      []models.OrderItem{},
+	}
+
+	// Create order items
+	for _, item := range customer.Cart {
+		orderItem := models.OrderItem{
+			IDOrder:  orderID,
+			IDProduk: item.IDProduk,
+			Jumlah:   item.Jumlah,
+			Subtotal: item.Subtotal,
+		}
+		order.Items = append(order.Items, orderItem)
+	}
+
+	// Save to database using transaction
+	tx := config.DB.Begin()
+	if err := tx.Create(&order).Error; err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	// Clear the cart after successful checkout
+	customer.Cart = make(map[string]session.CartItem)
+	customer.Total = 0
+
+	jsonData, err := json.Marshal(customer)
+	if err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	// Save the updated session
+	sess.Values[SessionKey] = string(jsonData)
+	if err := sess.Save(r, w); err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	// Commit transaction
+	tx.Commit()
+
+	return orderID, nil
 }
