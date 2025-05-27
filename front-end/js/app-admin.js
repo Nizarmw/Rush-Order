@@ -43,10 +43,8 @@ if (window.location.pathname.endsWith('index.html')) {
     document.getElementById("btn-logout").addEventListener("click", function (e) {
         e.preventDefault();
 
-        // (Opsional) Panggil endpoint logout backend
         fetch("http://localhost:8080/api/admin/logout", {
             method: "POST",
-            // Tidak perlu credentials karena tidak pakai cookie
             headers: {
                 "Content-Type": "application/json"
             }
