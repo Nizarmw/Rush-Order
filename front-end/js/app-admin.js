@@ -43,23 +43,18 @@ if (window.location.pathname.endsWith('index.html')) {
     document.getElementById("btn-logout").addEventListener("click", function (e) {
         e.preventDefault();
 
-        fetch("http://localhost:8080/api/admin/logout", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-
+    fetch("http://localhost:8080/api/admin/logout", {
+        method: "POST",
+        credentials: "include"
+    })
         .then(response => {
-            if (response.ok) {
-                console.log("Logout berhasil");
-                // Redirect ke login
-                window.location.href = "login.html";
-            } else {
-                return response.json().then(data => {
-                    console.error("Logout gagal:", data.error);
-                });
+            if (!response.ok) {
+                throw new Error("Logout gagal");
             }
+
+            sessionStorage.removeItem("user-admin");
+
+            window.location.href = "login.html";
         })
         .catch(error => {
             console.log("Error logout:", error);
