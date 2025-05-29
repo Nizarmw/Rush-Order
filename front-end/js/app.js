@@ -256,4 +256,38 @@ if (window.location.pathname.endsWith('index.html')) {
             });
         }
     }
+
+    async function loadCart() {
+        try {
+            const response = await fetch('http://localhost:8080/api/carts/', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Gagal mengambil cart');
+            const data = await response.json();
+
+            // Render items
+            const cartItemsDiv = document.getElementById('cartItems');
+            if (!cartItemsDiv) return;
+            if (!data.items || Object.keys(data.items).length === 0) {
+                cartItemsDiv.innerHTML = '<p>Keranjang kosong.</p>';
+            } else {
+                cartItemsDiv.innerHTML = Object.values(data.items).map(item => `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <h4>${item.nama_produk}</h4>
+                            <p>Jumlah: ${item.jumlah}</p>
+                            <p>Subtotal: Rp ${item.subtotal}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render total
+            const cartTotalSpan = document.getElementById('cartTotal');
+            if (cartTotalSpan) cartTotalSpan.textContent = data.total || 0;
+
+        } catch (err) {
+            console.error('Error loading cart:', err);
+        }
+    }
 }
