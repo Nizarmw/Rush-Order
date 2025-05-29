@@ -9,11 +9,13 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/joho/godotenv v1.5.1
+	github.com/veritrans/go-midtrans v0.0.0-20210616100512-16326c5eeb00
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.26.1
 )
 
 require (
+	github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 )

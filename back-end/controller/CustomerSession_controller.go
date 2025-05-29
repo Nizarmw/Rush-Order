@@ -2,6 +2,7 @@ package controller
 
 import (
 	"RushOrder/service"
+	"RushOrder/session"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,13 +22,21 @@ func CustomerLoginHandler(c *gin.Context) {
 	}
 
 	id := uuid.New().String()
-	err := service.CreateSession(c.Writer, c.Request, id, req.Nama, req.Meja)
+	customerData := session.CustomerSession{
+		ID:    id,
+		Nama:  req.Nama,
+		Meja:  req.Meja,
+		Cart:  make(map[string]session.CartItem),
+		Total: 0,
+	}
+
+	err := service.CreateSession(c.Writer, c.Request, customerData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal membuat sesi"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "login berhasil"})
+	c.JSON(http.StatusOK, customerData)
 }
 
 func GetCustomerSessionHandler(c *gin.Context) {

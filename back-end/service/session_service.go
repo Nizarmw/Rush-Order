@@ -25,24 +25,17 @@ func InitSessionStore(secretKey string) {
 		MaxAge:   SessionMaxAge,
 		HttpOnly: true,
 		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
 	}
 }
 
-func CreateSession(w http.ResponseWriter, r *http.Request, id, nama string, meja int) error {
+func CreateSession(w http.ResponseWriter, r *http.Request, data session.CustomerSession) error {
 	sess, err := Store.Get(r, SessionName)
 	if err != nil {
 		return err
 	}
 
-	customerData := session.CustomerSession{
-		ID:    id,
-		Nama:  nama,
-		Meja:  meja,
-		Cart:  make(map[string]session.CartItem),
-		Total: 0,
-	}
-
-	jsonData, err := json.Marshal(customerData)
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}

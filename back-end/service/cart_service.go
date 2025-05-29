@@ -200,8 +200,8 @@ func CheckoutCart(w http.ResponseWriter, r *http.Request) (string, error) {
 		IDOrder:    orderID,
 		IDPemesan:  customer.ID,
 		TotalHarga: customer.Total,
-		Status:     false,
-		Items:      []models.OrderItem{},
+
+		Items: []models.OrderItem{},
 	}
 
 	// Create order items

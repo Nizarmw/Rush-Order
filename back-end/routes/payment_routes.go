@@ -1,0 +1,17 @@
+package routes
+
+import (
+	"RushOrder/controller"
+
+	"github.com/gin-gonic/gin"
+)
+
+func RegisterPaymentRoutes(r *gin.Engine) {
+	payment := r.Group("/api/payment")
+	{
+		payment.POST("/", controller.CreatePaymentHandler)
+		payment.POST("/webhook", controller.MidtransWebhookHandler)
+		payment.GET("/:order_id", controller.GetPaymentHandler)
+		payment.POST("/checkout", controller.CheckoutAndPayHandler)
+	}
+}
