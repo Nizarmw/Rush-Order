@@ -77,3 +77,18 @@ func AdminLogoutHandler() gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Logout berhasil"})
 	}
 }
+
+func GetOrdersAdminHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orders, err := service.GetOrdersAdmin(db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Berhasil mendapatkan order dengan status admin process",
+			"orders":  orders,
+		})
+	}
+}

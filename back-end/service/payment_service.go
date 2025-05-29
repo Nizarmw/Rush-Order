@@ -121,10 +121,10 @@ func UpdatePaymentStatus(orderID, transactionID, midtransStatus string) error {
 		"status_customer": customerStatus,
 	}
 
-	if adminStatus != "" {
-		updateData["status_admin"] = adminStatus
+	if customerStatus == models.CustomerStatusSuccess {
+		updateData["status_admin"] = models.AdminStatusProcess 
 	} else {
-		updateData["status_admin"] = ""
+		updateData["status_admin"] = "" 
 	}
 
 	if err := tx.Model(&order).Updates(updateData).Error; err != nil {

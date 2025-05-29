@@ -100,3 +100,14 @@ func HashPassword(password string) (string, error) {
 	}
 	return string(hashedBytes), nil
 }
+
+func GetOrdersAdmin(db *gorm.DB) ([]models.Order, error) {
+	var orders []models.Order
+	if err := db.Preload("Items").
+		Where("status_admin = ?", models.AdminStatusProcess).
+		Order("created_at DESC").
+		Find(&orders).Error; err != nil {
+		return nil, fmt.Errorf("gagal mendapatkan order dengan status admin process: %v", err)
+	}
+	return orders, nil
+}
