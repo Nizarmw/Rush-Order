@@ -3,7 +3,6 @@ package controller
 import (
 	"RushOrder/service"
 	"RushOrder/session"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,8 +31,6 @@ func AddToCartHandler(c *gin.Context) {
 
 	err := service.AddToCart(c.Writer, c.Request, item)
 	if err != nil {
-		// Tambahkan log untuk membantu debugging
-		log.Println("AddToCart error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal tambah ke cart"})
 		return
 	}
