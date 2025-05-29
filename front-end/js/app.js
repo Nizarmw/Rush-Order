@@ -96,6 +96,48 @@ if (window.location.pathname.endsWith('index.html')) {
                 animateCartIcon();
                 showAlert("Berhasil Tambah Menu", "success")
             })
+
+            btn.addEventListener('click',
+            () => {
+                const inp_data = btn.parentElement.querySelector('.quantity-controls input')
+
+                const idProduk = inp_data.id
+                const namaProduk = btn.parentElement.querySelector('h3').innerHTML
+                const jumlah = parseInt(inp_data.value)
+                const harga = parseInt(btn.parentElement.querySelector('.menu-item-price').innerHTML.replace(/[^0-9]/g, ""))
+
+                console.log(idProduk)
+                console.log(namaProduk)
+                console.log(jumlah)
+                console.log(harga)
+
+                fetch('http://localhost:8080/api/carts/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        id_produk: idProduk,
+                        nama_produk: namaProduk,
+                        jumlah: jumlah,
+                        harga: harga
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.message) {
+                        animateCartIcon();
+                        showAlert("Berhasil Tambah Menu", "success");
+                    } else {
+                        showAlert(data.error || "Gagal menambahkan", "error");
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    showAlert("Terjadi kesalahan saat menambahkan", "error");
+                });
+            })
         })
     }
 

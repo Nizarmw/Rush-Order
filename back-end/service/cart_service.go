@@ -17,16 +17,24 @@ func AddToCart(w http.ResponseWriter, r *http.Request, item session.CartItem) er
 		return err
 	}
 
-	sessionData, ok := sess.Values[SessionKey]
-	if !ok {
-		return errors.New("session tidak ditemukan")
-	}
-
 	var customer session.CustomerSession
-	if err := json.Unmarshal([]byte(sessionData.(string)), &customer); err != nil {
-		return err
+
+	// Coba ambil data session
+	sessionData, ok := sess.Values[SessionKey]
+	if ok {
+		// Jika ada, decode JSON ke struct
+		if err := json.Unmarshal([]byte(sessionData.(string)), &customer); err != nil {
+			return err
+		}
+	} else {
+		// Jika belum ada, buat struct kosong
+		customer = session.CustomerSession{
+			Cart:  make(map[string]session.CartItem),
+			Total: 0,
+		}
 	}
 
+	// Update atau tambah item
 	if existingItem, exists := customer.Cart[item.IDProduk]; exists {
 		existingItem.Jumlah += item.Jumlah
 		existingItem.Subtotal = existingItem.Harga * existingItem.Jumlah
@@ -36,12 +44,14 @@ func AddToCart(w http.ResponseWriter, r *http.Request, item session.CartItem) er
 		customer.Cart[item.IDProduk] = item
 	}
 
+	// Hitung ulang total
 	total := 0
 	for _, val := range customer.Cart {
 		total += val.Subtotal
 	}
 	customer.Total = total
 
+	// Simpan kembali ke session
 	jsonData, err := json.Marshal(customer)
 	if err != nil {
 		return err
