@@ -251,6 +251,56 @@ if (window.location.pathname.endsWith('index.html')) {
             overlay.classList.add('active');
         }
     }
+
+    async function paymentMidtrans() {
+        try {
+            const response = await fetch('http://localhost:8080/api/payment/checkout', {
+                method: 'POST',
+                credentials: 'include', // penting untuk mengirim session cookie
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+    
+            const data = await response.json();
+    
+            if (!response.ok) {
+                alert(data.error || "Gagal membuat pembayaran.");
+                return;
+            }
+    
+            const snapToken = data.snap_token;
+    
+            if (!snapToken) {
+                alert("Token pembayaran tidak ditemukan.");
+                return;
+            }
+    
+            // Panggil Snap popup Midtrans
+            window.snap.pay(snapToken, {
+                onSuccess: function(result) {
+                    alert("Pembayaran berhasil!");
+                    console.log("Sukses:", result);
+                    // Kamu bisa redirect atau update UI di sini
+                },
+                onPending: function(result) {
+                    alert("Pembayaran masih pending.");
+                    console.log("Pending:", result);
+                },
+                onError: function(result) {
+                    alert("Terjadi kesalahan saat pembayaran.");
+                    console.error("Error:", result);
+                },
+                onClose: function() {
+                    alert("Kamu menutup popup sebelum selesai.");
+                }
+            });
+    
+        } catch (err) {
+            console.error("Terjadi kesalahan:", err);
+            alert("Terjadi kesalahan saat memproses pembayaran.");
+        }
+    }   
     
 
     window.onload = function () {
@@ -259,6 +309,8 @@ if (window.location.pathname.endsWith('index.html')) {
             window.location.href = "login.html";
         } else {
             showProduk();
+
+            document.getElementById('checkoutBtn').addEventListener('click', paymentMidtrans)
 
             fetch('http://localhost:8080/api/sessions/', {
                 credentials: 'include'
@@ -358,5 +410,5 @@ if (window.location.pathname.endsWith('index.html')) {
         } catch (err) {
             console.error('Error loading cart:', err);
         }
-    }
+    } 
 }

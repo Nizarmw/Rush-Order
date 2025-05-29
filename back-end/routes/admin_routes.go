@@ -15,5 +15,5 @@ func SetupAdminRoutes(r *gin.Engine, db *gorm.DB) {
 	admin.POST("/logout", controller.AdminLogoutHandler())
 	admin.Use(middleware.AdminAuthMiddleware(db))
 
-	admin.GET("/orders", controller.GetOrdersAdminHandler(db))
+	admin.GET("/order", controller.GetOrdersAdminHandler(db))
 }
