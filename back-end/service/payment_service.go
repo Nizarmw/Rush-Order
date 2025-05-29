@@ -32,7 +32,6 @@ func CreateSnapToken(orderID string) (*SnapResponse, error) {
 	var order models.Order
 
 	if err := config.DB.
-		Preload("Items").
 		Where("id_order = ?", orderID).
 		First(&order).Error; err != nil {
 		return nil, fmt.Errorf("order not found: %v", err)
@@ -204,7 +203,6 @@ func CreatePaymentFromCart(w http.ResponseWriter, r *http.Request) (string, stri
 func GetOrderStatus(orderID string) (*models.Order, error) {
 	var order models.Order
 	if err := config.DB.
-		Preload("Items").
 		Where("id_order = ?", orderID).
 		First(&order).Error; err != nil {
 		return nil, fmt.Errorf("order not found: %v", err)
@@ -214,7 +212,7 @@ func GetOrderStatus(orderID string) (*models.Order, error) {
 
 func GetAdminOrders(status string) ([]models.Order, error) {
 	var orders []models.Order
-	query := config.DB.Preload("Items").Where("status_customer = ?", models.CustomerStatusSuccess)
+	query := config.DB.Where("status_customer = ?", models.CustomerStatusSuccess)
 
 	if status != "" {
 		query = query.Where("status_admin = ?", status)

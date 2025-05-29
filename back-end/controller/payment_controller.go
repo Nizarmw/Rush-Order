@@ -134,6 +134,9 @@ func GetOrderStatusHandler(c *gin.Context) {
 		return
 	}
 
+	// Ambil items manual
+	items, _ := service.GetOrderItems(orderID)
+
 	payment, err := service.GetPaymentByOrderID(orderID)
 
 	response := gin.H{
@@ -141,7 +144,7 @@ func GetOrderStatusHandler(c *gin.Context) {
 		"id_pemesan":      order.IDPemesan,
 		"total_harga":     order.TotalHarga,
 		"status_customer": order.StatusCustomer,
-		"items":           order.Items,
+		"items":           items,
 	}
 
 	if err == nil {
@@ -213,13 +216,14 @@ func GetAdminOrdersHandler(c *gin.Context) {
 
 	response := make([]gin.H, len(orders))
 	for i, order := range orders {
+		items, _ := service.GetOrderItems(order.IDOrder)
 		response[i] = gin.H{
 			"id_order":        order.IDOrder,
 			"id_pemesan":      order.IDPemesan,
 			"total_harga":     order.TotalHarga,
 			"status_customer": order.StatusCustomer,
 			"status_admin":    order.StatusAdmin,
-			"items":           order.Items,
+			"items":           items,
 		}
 	}
 

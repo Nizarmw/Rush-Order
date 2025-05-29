@@ -192,27 +192,15 @@ func CheckoutCart(w http.ResponseWriter, r *http.Request) (string, error) {
 		return "", errors.New("keranjang kosong")
 	}
 
-	// Generate order ID (you can replace this with your own ID generation logic)
+	// Generate order ID
 	orderID := fmt.Sprintf("ORD%d", time.Now().Unix())
 
-	// Create order
+	// Create order (tanpa Items)
 	order := models.Order{
 		IDOrder:    orderID,
 		IDPemesan:  customer.ID,
 		TotalHarga: customer.Total,
-
-		Items: []models.OrderItem{},
-	}
-
-	// Create order items
-	for _, item := range customer.Cart {
-		orderItem := models.OrderItem{
-			IDOrder:  orderID,
-			IDProduk: item.IDProduk,
-			Jumlah:   item.Jumlah,
-			Subtotal: item.Subtotal,
-		}
-		order.Items = append(order.Items, orderItem)
+		// Field lain sesuai kebutuhan
 	}
 
 	// Save to database using transaction
@@ -220,6 +208,20 @@ func CheckoutCart(w http.ResponseWriter, r *http.Request) (string, error) {
 	if err := tx.Create(&order).Error; err != nil {
 		tx.Rollback()
 		return "", err
+	}
+
+	// Create and save order items satu per satu
+	for _, item := range customer.Cart {
+		orderItem := models.OrderItem{
+			IDOrder:  orderID,
+			IDProduk: item.IDProduk,
+			Jumlah:   item.Jumlah,
+			Subtotal: item.Subtotal,
+		}
+		if err := tx.Create(&orderItem).Error; err != nil {
+			tx.Rollback()
+			return "", err
+		}
 	}
 
 	// Clear the cart after successful checkout
