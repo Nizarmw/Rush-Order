@@ -19,16 +19,16 @@ func CreateProdukHandler(c *gin.Context) {
 	deskripsi := c.PostForm("deskripsi")
 	hargaProdukStr := c.PostForm("harga_produk")
 	kategoriStr := strings.ToLower(c.PostForm("kategori"))
-	fmt.Printf("Kategori yang diterima: '%s'\n", kategoriStr) // Debug log
+	fmt.Printf("Kategori yang diterima: '%s'\n", kategoriStr)
 
 	kategori := models.KategoriProduk(kategoriStr)
-	fmt.Printf("Kategori setelah konversi: '%s'\n", string(kategori)) // Debug log
-	fmt.Printf("IsValid result: %t\n", kategori.IsValid())            // Debug log
+	fmt.Printf("Kategori setelah konversi: '%s'\n", string(kategori))
+	fmt.Printf("IsValid result: %t\n", kategori.IsValid())
 
 	if !kategori.IsValid() {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":             "Kategori tidak valid, pilih: Makanan, Minuman, atau Snack",
-			"received_category": kategoriStr, // Tambahkan ini untuk debug
+			"received_category": kategoriStr,
 			"valid_categories":  models.GetValidKategoriProduk(),
 		})
 		return

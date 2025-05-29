@@ -113,7 +113,6 @@ func UpdateCartItemHandler(c *gin.Context) {
 	}
 }
 
-// CheckoutCartHandler handles the checkout process to convert cart to order
 func CheckoutCartHandler(c *gin.Context) {
 	orderID, err := service.CheckoutCart(c.Writer, c.Request)
 	if err != nil {

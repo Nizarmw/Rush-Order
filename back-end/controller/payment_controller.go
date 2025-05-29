@@ -136,7 +136,6 @@ func GetOrderStatusHandler(c *gin.Context) {
 		return
 	}
 
-	// Ambil items manual
 	items, _ := service.GetOrderItems(orderID)
 	payment, err := service.GetPaymentByOrderID(orderID)
 	response := gin.H{
@@ -171,7 +170,6 @@ func UpdateAdminStatusHandler(c *gin.Context) {
 		return
 	}
 
-	// Validate admin status
 	if req.Status != models.AdminStatusProcess && req.Status != models.AdminStatusCompleted {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid admin status"})
 		return
@@ -197,7 +195,6 @@ func UpdateAdminStatusHandler(c *gin.Context) {
 	})
 }
 
-// SimulatePaymentSuccessHandler - untuk development testing
 func SimulatePaymentSuccessHandler(c *gin.Context) {
 	log.Println("--- SimulatePaymentSuccessHandler invoked (restored to full simulation) ---")
 	orderID := c.Param("order_id")
@@ -206,23 +203,17 @@ func SimulatePaymentSuccessHandler(c *gin.Context) {
 		return
 	}
 
-	// Simulate successful payment ("settlement")
 	transactionID := fmt.Sprintf("SIM_%d", time.Now().Unix())
-	err := service.UpdatePaymentStatus(orderID, transactionID, "settlement") // This sets customer_status to 'success' and admin_status to 'pending' or 'process'
+	err := service.UpdatePaymentStatus(orderID, transactionID, "settlement")
 	if err != nil {
 		log.Printf("Error simulating payment success for order %s: %v", orderID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal simulasi pembayaran"})
 		return
 	}
 
-	// Explicitly update admin status to "process" to ensure it's ready for admin completion
-	// This is helpful if UpdatePaymentStatus only sets it to 'pending'
 	err = service.UpdateAdminStatus(orderID, models.AdminStatusProcess)
 	if err != nil {
 		log.Printf("Error updating admin status to 'process' after simulating payment for order %s: %v", orderID, err)
-		// If this fails, it might be because customer payment wasn't seen as completed by UpdateAdminStatus,
-		// or order was already processed/completed.
-		// We'll still return a success for the simulation part, but log this error.
 	}
 
 	log.Printf("Payment simulated as 'settlement' and admin status set to 'process' for order %s.", orderID)

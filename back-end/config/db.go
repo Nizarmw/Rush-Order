@@ -49,47 +49,44 @@ func InitDB() {
 
 	fmt.Println("Migrating Pemesan...")
 	if err := db.AutoMigrate(&models.Pemesan{}); err != nil {
-		log.Fatal("❌ Gagal migrasi Pemesan:", err)
+		log.Fatal("Gagal migrasi Pemesan:", err)
 	}
 
 	fmt.Println("Migrating Produk...")
 	if err := db.AutoMigrate(&models.Produk{}); err != nil {
-		log.Fatal("❌ Gagal migrasi Produk:", err)
+		log.Fatal("Gagal migrasi Produk:", err)
 	}
 
 	fmt.Println("Migrating Order...")
 	if err := db.AutoMigrate(&models.Order{}); err != nil {
-		log.Fatal("❌ Gagal migrasi Order:", err)
+		log.Fatal("Gagal migrasi Order:", err)
 	}
 
 	fmt.Println("Migrating OrderItem...")
 	if err := db.AutoMigrate(&models.OrderItem{}); err != nil {
-		log.Fatal("❌ Gagal migrasi OrderItem:", err)
+		log.Fatal("Gagal migrasi OrderItem:", err)
 	}
 
 	fmt.Println("Migrating Pegawai...")
 	if err := db.AutoMigrate(&models.Pegawai{}); err != nil {
-		log.Fatal("❌ Gagal migrasi Pegawai:", err)
+		log.Fatal("Gagal migrasi Pegawai:", err)
 	}
 
 	fmt.Println("Migrating Payment...")
 	if err := db.AutoMigrate(&models.Payment{}); err != nil {
-		log.Fatal("❌ Gagal migrasi Payment:", err)
+		log.Fatal("Gagal migrasi Payment:", err)
 	}
 
 	fmt.Println("Database migrated!")
 
-	// Seed data
 	seedData()
 }
 
 func seedData() {
 	fmt.Println("Starting database seeding...")
 
-	// Seed Pegawai data
 	seedPegawai()
 
-	// Seed Produk data
 	seedProduk()
 
 	fmt.Println("Database seeding completed!")
@@ -98,7 +95,6 @@ func seedData() {
 func seedPegawai() {
 	fmt.Println("Seeding Pegawai data...")
 
-	// Check if pegawai already exists
 	var count int64
 	DB.Model(&models.Pegawai{}).Count(&count)
 	if count > 0 {
@@ -106,7 +102,6 @@ func seedPegawai() {
 		return
 	}
 
-	// Create admin pegawai
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
@@ -121,14 +116,13 @@ func seedPegawai() {
 	if err := DB.Create(&pegawai); err.Error != nil {
 		log.Printf("Error seeding pegawai: %v", err.Error)
 	} else {
-		fmt.Printf("✅ Created pegawai: %s\n", pegawai.Username)
+		fmt.Printf("Created pegawai: %s\n", pegawai.Username)
 	}
 }
 
 func seedProduk() {
 	fmt.Println("Seeding Produk data...")
 
-	// Check if produk already exists
 	var count int64
 	DB.Model(&models.Produk{}).Count(&count)
 	if count > 0 {
@@ -136,7 +130,6 @@ func seedProduk() {
 		return
 	}
 
-	// Create sample products for each category
 	products := []models.Produk{
 		{
 			IDProduk:    "MKN001",
@@ -168,7 +161,7 @@ func seedProduk() {
 		if err := DB.Create(&product); err.Error != nil {
 			log.Printf("Error seeding produk %s: %v", product.IDProduk, err.Error)
 		} else {
-			fmt.Printf("✅ Created produk: %s - %s (%s)\n", product.IDProduk, product.NamaProduk, product.Kategori)
+			fmt.Printf("Created produk: %s - %s (%s)\n", product.IDProduk, product.NamaProduk, product.Kategori)
 		}
 	}
 }

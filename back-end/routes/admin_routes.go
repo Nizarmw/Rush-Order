@@ -15,6 +15,5 @@ func SetupAdminRoutes(r *gin.Engine, db *gorm.DB) {
 	admin.GET("/orders", controller.GetAdminOrdersHandler)
 	admin.PUT("/orders/status", controller.UpdateAdminStatusHandler)
 
-	// Legacy route for compatibility
 	admin.GET("/order", controller.GetOrdersAdminHandler(db))
 }

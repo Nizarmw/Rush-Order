@@ -170,7 +170,6 @@ func UpdateCartItemHandler(w http.ResponseWriter, r *http.Request, idProduk stri
 	return sess.Save(r, w)
 }
 
-// CheckoutCart converts the cart items to an order and saves it to the database
 func CheckoutCart(w http.ResponseWriter, r *http.Request) (string, error) {
 	sess, err := Store.Get(r, SessionName)
 	if err != nil {
@@ -187,30 +186,24 @@ func CheckoutCart(w http.ResponseWriter, r *http.Request) (string, error) {
 		return "", err
 	}
 
-	// Check if cart is empty
 	if len(customer.Cart) == 0 {
 		return "", errors.New("keranjang kosong")
 	}
 
-	// Generate order ID
 	orderID := fmt.Sprintf("ORD%d", time.Now().Unix())
 
-	// Create order (tanpa Items)
 	order := models.Order{
 		IDOrder:    orderID,
 		IDPemesan:  customer.ID,
 		TotalHarga: customer.Total,
-		// Field lain sesuai kebutuhan
 	}
 
-	// Save to database using transaction
 	tx := config.DB.Begin()
 	if err := tx.Create(&order).Error; err != nil {
 		tx.Rollback()
 		return "", err
 	}
 
-	// Create and save order items satu per satu
 	for _, item := range customer.Cart {
 		orderItem := models.OrderItem{
 			IDOrder:  orderID,
@@ -224,7 +217,6 @@ func CheckoutCart(w http.ResponseWriter, r *http.Request) (string, error) {
 		}
 	}
 
-	// Clear the cart after successful checkout
 	customer.Cart = make(map[string]session.CartItem)
 	customer.Total = 0
 
@@ -234,14 +226,12 @@ func CheckoutCart(w http.ResponseWriter, r *http.Request) (string, error) {
 		return "", err
 	}
 
-	// Save the updated session
 	sess.Values[SessionKey] = string(jsonData)
 	if err := sess.Save(r, w); err != nil {
 		tx.Rollback()
 		return "", err
 	}
 
-	// Commit transaction
 	tx.Commit()
 
 	return orderID, nil

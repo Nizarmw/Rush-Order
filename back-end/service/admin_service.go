@@ -112,16 +112,12 @@ func GetOrdersAdmin(db *gorm.DB) ([]models.Order, error) {
 	return orders, nil
 }
 
-// GetAdminOrders gets orders with optional status filter for admin dashboard
 func GetAdminOrders(db *gorm.DB, status string) ([]models.Order, error) {
 	var orders []models.Order
 	query := db.Model(&models.Order{})
 
 	if status != "" {
 		if status == models.AdminStatusProcess {
-			// Show orders that are either:
-			// 1. Successfully paid and in process status
-			// 2. Pending payment but have payment token (newly created orders)
 			query = query.Where(
 				"(status_admin = ? AND status_customer = ?) OR (status_customer = ? AND EXISTS (SELECT 1 FROM payments WHERE payments.id_order = orders.id_order AND payments.snap_token IS NOT NULL AND payments.snap_token != ''))",
 				status, models.CustomerStatusSuccess, models.CustomerStatusPending,
@@ -132,7 +128,6 @@ func GetAdminOrders(db *gorm.DB, status string) ([]models.Order, error) {
 			return nil, fmt.Errorf("invalid status filter")
 		}
 	} else {
-		// Get all orders that have been paid (success) or have payment token
 		query = query.Where(
 			"status_customer = ? OR (status_customer = ? AND EXISTS (SELECT 1 FROM payments WHERE payments.id_order = orders.id_order AND payments.snap_token IS NOT NULL AND payments.snap_token != ''))",
 			models.CustomerStatusSuccess, models.CustomerStatusPending,
@@ -145,11 +140,9 @@ func GetAdminOrders(db *gorm.DB, status string) ([]models.Order, error) {
 	return orders, nil
 }
 
-// GetOrderStats gets statistics for admin dashboard
 func GetOrderStats(db *gorm.DB) (map[string]interface{}, error) {
 	stats := make(map[string]interface{})
 
-	// Count pending orders (process status)
 	var pendingCount int64
 	if err := db.Model(&models.Order{}).
 		Where("status_admin = ? AND status_customer = ?", models.AdminStatusProcess, models.CustomerStatusSuccess).
@@ -157,7 +150,6 @@ func GetOrderStats(db *gorm.DB) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("gagal menghitung pending orders: %v", err)
 	}
 
-	// Count completed orders
 	var completedCount int64
 	if err := db.Model(&models.Order{}).
 		Where("status_admin = ?", models.AdminStatusCompleted).
@@ -165,7 +157,6 @@ func GetOrderStats(db *gorm.DB) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("gagal menghitung completed orders: %v", err)
 	}
 
-	// Calculate total revenue from completed orders
 	var totalRevenue int64
 	if err := db.Model(&models.Order{}).
 		Where("status_admin = ?", models.AdminStatusCompleted).
@@ -174,7 +165,6 @@ func GetOrderStats(db *gorm.DB) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("gagal menghitung total revenue: %v", err)
 	}
 
-	// Total orders (all paid orders)
 	var totalOrders int64
 	if err := db.Model(&models.Order{}).
 		Where("status_customer = ?", models.CustomerStatusSuccess).
