@@ -27,9 +27,9 @@
                             <span>Meja <span id="tableNumber"></span></span>
                             <button id="btn-logout" onclick="logout()">Logout</button>
                         </div>
-                        <div class="cart-icon">
+                        <div class="cart-icon" onclick="toggleCart()">
                             <i class="fas fa-shopping-cart"></i>
-                            <span id="cartCount" class="cart-count">0</span>
+                            <!-- <span id="cartCount" class="cart-count">0</span> -->
                         </div>
                     </div>
                 </div>
@@ -53,12 +53,25 @@
         <div id="cartSidebar" class="cart-sidebar">
             <div class="cart-header">
                 <h3><i class="fas fa-shopping-cart"></i> Keranjang</h3>
-                <button class="close-cart">
+                <button class="close-cart" onclick="toggleCart()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div id="cartItems" class="cart-items">
-                <!-- Cart items will be loaded here -->
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <h4>Nama Produk</h4>
+                        <p>Rp 50000</p>
+                    </div>
+                    <div class="cart-item-controls">
+                        <!-- <button class="quantity-btn">-</button> -->
+                        <span>5</span>
+                        <!-- <button class="quantity-btn">+</button> -->
+                        <button class="quantity-btn" style="color: #e53e3e; margin-left: 10px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="cart-footer">
                 <div class="cart-total">

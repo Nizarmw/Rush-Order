@@ -99,7 +99,7 @@ if (window.location.pathname.endsWith('index.html')) {
 
             btn.addEventListener('click', async () => {
                 const inp_data = btn.parentElement.querySelector('.quantity-controls input')
-                const idProduk = inp_data.id
+                const idProduk = inp_data.id.substring(4, 10)
                 const namaProduk = btn.parentElement.querySelector('h3').innerHTML
                 const jumlah = parseInt(inp_data.value)
                 const harga = parseInt(btn.parentElement.querySelector('.menu-item-price').innerHTML.replace(/[^0-9]/g, ""))
@@ -144,6 +144,8 @@ if (window.location.pathname.endsWith('index.html')) {
                             } else {
                                 throw new Error(`Session fetch failed: ${sessionResponse.status}`);
                             }
+
+                            loadCart();
                         } catch (sessionError) {
                             console.error("Session update failed:", sessionError);
                             // Cart berhasil, tapi session update gagal
@@ -234,6 +236,21 @@ if (window.location.pathname.endsWith('index.html')) {
             alert("Terjadi kesalahan saat logout.");
         });
     }
+
+    function toggleCart() {
+        const cartSidebar = document.getElementById('cartSidebar');
+        const overlay = document.getElementById('overlay');
+        
+        const isOpen = cartSidebar.classList.contains('open');
+        
+        if (isOpen) {
+            cartSidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        } else {
+            cartSidebar.classList.add('open');
+            overlay.classList.add('active');
+        }
+    }
     
 
     window.onload = function () {
@@ -278,6 +295,11 @@ if (window.location.pathname.endsWith('index.html')) {
                             <p>Jumlah: ${item.jumlah}</p>
                             <p>Subtotal: Rp ${item.subtotal}</p>
                         </div>
+                        <div class="cart-item-controls">
+                        <button id="min-${item.id_produk}" class="quantity-btn" style="color: #e53e3e; margin-left: 10px;" onclick="delCart()">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                     </div>
                 `).join('');
             }
