@@ -274,6 +274,53 @@ if (window.location.pathname.endsWith('index.html')) {
         }
     }
 
+    window.delCart = async function(id) {
+        try {
+            const response = await fetch(`http://localhost:8080/api/carts/?id=${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+    
+            const result = await response.json();
+    
+            if (response.ok) {
+                showAlert(result.message || "Item dihapus dari cart", "success");
+                animateCartIcon();
+                try {
+                    const sessionResponse = await fetch('http://localhost:8080/api/sessions/', {
+                        credentials: 'include'
+                    });
+    
+                    console.log('Session response status:', sessionResponse.status);
+                    
+                    if (sessionResponse.ok) {
+                        const userData = await sessionResponse.json();
+                        console.log('Session data:', userData);
+                        
+                        sessionStorage.removeItem('user');
+                        sessionStorage.setItem('user', JSON.stringify(userData));
+                        animateCartIcon();
+                        showAlert("Berhasil Hapus Menu", "success");
+                    } else {
+                        throw new Error(`Session fetch failed: ${sessionResponse.status}`);
+                    }
+
+                    loadCart();
+                } catch (sessionError) {
+                    console.error("Session update failed:", sessionError);
+                    // Cart berhasil, tapi session update gagal
+                    animateCartIcon();
+                    showAlert("Item ditambahkan, tapi gagal update session", "warning");
+                }
+            } else {
+                showAlert(result.error || "Gagal menghapus item", "error");
+            }
+        } catch (err) {
+            console.error("Delete error:", err);
+            showAlert("Terjadi kesalahan saat menghapus", "error");
+        }
+    }    
+
     async function loadCart() {
         try {
             const response = await fetch('http://localhost:8080/api/carts/', {
@@ -296,7 +343,7 @@ if (window.location.pathname.endsWith('index.html')) {
                             <p>Subtotal: Rp ${item.subtotal}</p>
                         </div>
                         <div class="cart-item-controls">
-                        <button id="min-${item.id_produk}" class="quantity-btn" style="color: #e53e3e; margin-left: 10px;" onclick="delCart()">
+                        <button id="min-${item.id_produk}" class="quantity-btn" style="color: #e53e3e; margin-left: 10px;" onclick="delCart('${item.id_produk}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
