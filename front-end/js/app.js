@@ -14,6 +14,7 @@ if (window.location.pathname.endsWith('login.html')) {
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'include', 
             body: JSON.stringify({
                 nama: nama,
                 meja: parseInt(meja)
