@@ -15,7 +15,11 @@ import (
 
 func init() {
 	if err := godotenv.Load("../.env"); err != nil {
-		panic("Error loading .env file")
+		log.Printf("Warning: Error loading .env file: %v", err)
+		// Try alternative paths
+		if err := godotenv.Load(".env"); err != nil {
+			log.Printf("Warning: Error loading .env file from current directory: %v", err)
+		}
 	}
 
 	if os.Getenv("MIDTRANS_SERVER_KEY") == "" || os.Getenv("MIDTRANS_CLIENT_KEY") == "" {
@@ -197,7 +201,7 @@ func CreatePaymentFromCart(w http.ResponseWriter, r *http.Request) (string, stri
 		return "", "", fmt.Errorf("failed to create payment: %v", err)
 	}
 
-	return orderID, snapResp.RedirectURL, nil
+	return orderID, snapResp.Token, nil
 }
 
 func GetOrderStatus(orderID string) (*models.Order, error) {
