@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -65,6 +66,7 @@ func InitDB() {
 	if err := db.AutoMigrate(&models.OrderItem{}); err != nil {
 		log.Fatal("❌ Gagal migrasi OrderItem:", err)
 	}
+
 	fmt.Println("Migrating Pegawai...")
 	if err := db.AutoMigrate(&models.Pegawai{}); err != nil {
 		log.Fatal("❌ Gagal migrasi Pegawai:", err)
@@ -90,6 +92,9 @@ func seedData() {
 	// Seed Produk data
 	seedProduk()
 
+	// Seed test orders
+	seedTestOrders()
+
 	fmt.Println("Database seeding completed!")
 }
 
@@ -105,9 +110,15 @@ func seedPegawai() {
 	}
 
 	// Create admin pegawai
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Error hashing password: %v", err)
+		return
+	}
+
 	pegawai := models.Pegawai{
 		Username: "admin",
-		Password: "admin123", // In production, this should be hashed
+		Password: string(hashedPassword),
 	}
 
 	if err := DB.Create(&pegawai); err.Error != nil {
@@ -163,4 +174,89 @@ func seedProduk() {
 			fmt.Printf("✅ Created produk: %s - %s (%s)\n", product.IDProduk, product.NamaProduk, product.Kategori)
 		}
 	}
+}
+
+func seedTestOrders() {
+	fmt.Println("Seeding test orders...")
+
+	// Clear existing test orders first
+	DB.Where("id_order LIKE 'ORD%'").Delete(&models.OrderItem{})
+	DB.Where("id_order LIKE 'ORD%'").Delete(&models.Order{})
+	DB.Where("id_pemesan LIKE 'CUST%'").Delete(&models.Pemesan{})
+
+	// Create test customers
+	customers := []models.Pemesan{
+		{IDPemesan: "CUST001", Nama: "John Doe", Meja: 1},
+		{IDPemesan: "CUST002", Nama: "Jane Smith", Meja: 2},
+		{IDPemesan: "CUST003", Nama: "Bob Wilson", Meja: 3},
+	}
+
+	for _, customer := range customers {
+		if err := DB.Create(&customer); err.Error != nil {
+			log.Printf("Error creating customer %s: %v", customer.IDPemesan, err.Error)
+		} else {
+			fmt.Printf("✅ Created customer: %s - %s (Table %d)\n", customer.IDPemesan, customer.Nama, customer.Meja)
+		}
+	}
+	// Create test orders with different statuses
+	orders := []models.Order{
+		{
+			IDOrder:        "ORD001",
+			IDPemesan:      "CUST001",
+			TotalHarga:     33000,
+			StatusCustomer: "success",
+			StatusAdmin:    "process",
+			CreatedAt:      time.Now().Add(-30 * time.Minute),
+		},
+		{
+			IDOrder:        "ORD002",
+			IDPemesan:      "CUST002",
+			TotalHarga:     20000,
+			StatusCustomer: "success",
+			StatusAdmin:    "process",
+			CreatedAt:      time.Now().Add(-20 * time.Minute),
+		},
+		{
+			IDOrder:        "ORD003",
+			IDPemesan:      "CUST003",
+			TotalHarga:     45000,
+			StatusCustomer: "success",
+			StatusAdmin:    "completed",
+			CreatedAt:      time.Now().Add(-60 * time.Minute),
+		},
+	}
+
+	for _, order := range orders {
+		if err := DB.Create(&order); err.Error != nil {
+			log.Printf("Error creating order %s: %v", order.IDOrder, err.Error)
+		} else {
+			fmt.Printf("✅ Created order: %s - Customer %s (Status: %s/%s)\n",
+				order.IDOrder, order.IDPemesan, order.StatusCustomer, order.StatusAdmin)
+		}
+	}
+
+	// Create order items
+	orderItems := []models.OrderItem{
+		// Order 1 items
+		{IDOrder: "ORD001", IDProduk: "MKN001", Jumlah: 1, Subtotal: 25000},
+		{IDOrder: "ORD001", IDProduk: "MNM001", Jumlah: 1, Subtotal: 8000},
+		// Order 2 items
+		{IDOrder: "ORD002", IDProduk: "SNK001", Jumlah: 1, Subtotal: 12000},
+		{IDOrder: "ORD002", IDProduk: "MNM001", Jumlah: 1, Subtotal: 8000},
+		// Order 3 items
+		{IDOrder: "ORD003", IDProduk: "MKN001", Jumlah: 1, Subtotal: 25000},
+		{IDOrder: "ORD003", IDProduk: "SNK001", Jumlah: 1, Subtotal: 12000},
+		{IDOrder: "ORD003", IDProduk: "MNM001", Jumlah: 1, Subtotal: 8000},
+	}
+
+	for _, item := range orderItems {
+		if err := DB.Create(&item); err.Error != nil {
+			log.Printf("Error creating order item for order %s: %v", item.IDOrder, err.Error)
+		} else {
+			fmt.Printf("✅ Created order item: Order %s - Product %s (Qty: %d)\n",
+				item.IDOrder, item.IDProduk, item.Jumlah)
+		}
+	}
+
+	fmt.Println("Test orders seeded successfully!")
 }

@@ -111,3 +111,70 @@ func GetOrdersAdmin(db *gorm.DB) ([]models.Order, error) {
 	}
 	return orders, nil
 }
+
+// GetAdminOrders gets orders with optional status filter for admin dashboard
+func GetAdminOrders(db *gorm.DB, status string) ([]models.Order, error) {
+	var orders []models.Order
+	query := db.Model(&models.Order{})
+
+	if status != "" {
+		if status == models.AdminStatusProcess || status == models.AdminStatusCompleted {
+			query = query.Where("status_admin = ? AND status_customer = ?", status, models.CustomerStatusSuccess)
+		} else {
+			return nil, fmt.Errorf("invalid status filter")
+		}
+	} else {
+		// Get all orders that have been paid (success) regardless of admin status
+		query = query.Where("status_customer = ?", models.CustomerStatusSuccess)
+	}
+
+	if err := query.Order("created_at DESC").Find(&orders).Error; err != nil {
+		return nil, fmt.Errorf("gagal mendapatkan orders: %v", err)
+	}
+	return orders, nil
+}
+
+// GetOrderStats gets statistics for admin dashboard
+func GetOrderStats(db *gorm.DB) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	// Count pending orders (process status)
+	var pendingCount int64
+	if err := db.Model(&models.Order{}).
+		Where("status_admin = ? AND status_customer = ?", models.AdminStatusProcess, models.CustomerStatusSuccess).
+		Count(&pendingCount).Error; err != nil {
+		return nil, fmt.Errorf("gagal menghitung pending orders: %v", err)
+	}
+
+	// Count completed orders
+	var completedCount int64
+	if err := db.Model(&models.Order{}).
+		Where("status_admin = ?", models.AdminStatusCompleted).
+		Count(&completedCount).Error; err != nil {
+		return nil, fmt.Errorf("gagal menghitung completed orders: %v", err)
+	}
+
+	// Calculate total revenue from completed orders
+	var totalRevenue int64
+	if err := db.Model(&models.Order{}).
+		Where("status_admin = ?", models.AdminStatusCompleted).
+		Select("COALESCE(SUM(total_harga), 0)").
+		Scan(&totalRevenue).Error; err != nil {
+		return nil, fmt.Errorf("gagal menghitung total revenue: %v", err)
+	}
+
+	// Total orders (all paid orders)
+	var totalOrders int64
+	if err := db.Model(&models.Order{}).
+		Where("status_customer = ?", models.CustomerStatusSuccess).
+		Count(&totalOrders).Error; err != nil {
+		return nil, fmt.Errorf("gagal menghitung total orders: %v", err)
+	}
+
+	stats["pendingCount"] = pendingCount
+	stats["completedCount"] = completedCount
+	stats["totalRevenue"] = totalRevenue
+	stats["totalOrders"] = totalOrders
+
+	return stats, nil
+}

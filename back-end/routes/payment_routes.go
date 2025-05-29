@@ -19,10 +19,4 @@ func RegisterPaymentRoutes(r *gin.Engine) {
 	{
 		order.GET("/:order_id/status", controller.GetOrderStatusHandler)
 	}
-
-	admin := r.Group("/api/admin")
-	{
-		admin.GET("/orders", controller.GetAdminOrdersHandler)
-		admin.PUT("/orders/status", controller.UpdateAdminStatusHandler)
-	}
 }

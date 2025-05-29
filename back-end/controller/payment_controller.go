@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"RushOrder/config"
 	"RushOrder/models"
 	"RushOrder/service"
 	"log"
@@ -199,14 +200,13 @@ func UpdateAdminStatusHandler(c *gin.Context) {
 func GetAdminOrdersHandler(c *gin.Context) {
 	// Get optional status filter from query parameter
 	status := c.Query("status")
-
 	// Validate status if provided
 	if status != "" && status != models.AdminStatusProcess && status != models.AdminStatusCompleted {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid status filter"})
 		return
 	}
 
-	orders, err := service.GetAdminOrders(status)
+	orders, err := service.GetAdminOrders(config.DB, status)
 	if err != nil {
 		log.Printf("Error getting admin orders: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal mengambil data order"})
@@ -223,6 +223,7 @@ func GetAdminOrdersHandler(c *gin.Context) {
 			"status_customer": order.StatusCustomer,
 			"status_admin":    order.StatusAdmin,
 			"items":           items,
+			"created_at":      order.CreatedAt,
 		}
 	}
 

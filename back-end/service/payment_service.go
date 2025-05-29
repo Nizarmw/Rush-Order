@@ -213,18 +213,3 @@ func GetOrderStatus(orderID string) (*models.Order, error) {
 	}
 	return &order, nil
 }
-
-func GetAdminOrders(status string) ([]models.Order, error) {
-	var orders []models.Order
-	query := config.DB.Where("status_customer = ?", models.CustomerStatusSuccess)
-
-	if status != "" {
-		query = query.Where("status_admin = ?", status)
-	}
-
-	if err := query.Order("created_at DESC").Find(&orders).Error; err != nil {
-		return nil, fmt.Errorf("failed to get admin orders: %v", err)
-	}
-
-	return orders, nil
-}

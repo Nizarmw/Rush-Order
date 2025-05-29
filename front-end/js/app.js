@@ -86,17 +86,9 @@ if (window.location.pathname.endsWith('index.html')) {
         </div>
     `).join('');
         addMenuBehavior();
-    }
-
-    function addMenuBehavior() {
+    }    function addMenuBehavior() {
         const AddMenuBtn = document.querySelectorAll('.add-to-cart-btn');
         AddMenuBtn.forEach(btn => {
-            btn.addEventListener('click', () => {
-                console.log('aw dipencet');
-                animateCartIcon();
-                showAlert("Berhasil Tambah Menu", "success")
-            })
-
             btn.addEventListener('click', async () => {
                 const inp_data = btn.parentElement.querySelector('.quantity-controls input')
                 const idProduk = inp_data.id.substring(4, 10)
