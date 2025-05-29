@@ -274,18 +274,28 @@ if (window.location.pathname.endsWith('index.html')) {
             if (!snapToken) {
                 alert("Token pembayaran tidak ditemukan.");
                 return;
-            }
-    
-            // Panggil Snap popup Midtrans
-            window.snap.pay(snapToken, {
-                onSuccess: function(result) {
-                    alert("Pembayaran berhasil!");
-                    console.log("Sukses:", result);
-                    // Kamu bisa redirect atau update UI di sini
+            }            // Panggil Snap popup Midtrans
+            window.snap.pay(snapToken, {                onSuccess: function(result) {
+                    console.log("Payment Success:", result);
+                    
+                    // Store order ID for status tracking
+                    sessionStorage.setItem('currentOrderId', data.order_id);
+                    
+                    // Set flag that payment just completed successfully
+                    sessionStorage.setItem('paymentJustCompleted', 'true');
+                    
+                    // Show success page
+                    showSuccessPage(data.order_id, result);
                 },
                 onPending: function(result) {
-                    alert("Pembayaran masih pending.");
-                    console.log("Pending:", result);
+                    console.log("Payment Pending:", result);
+                    
+                    // Store order ID for status tracking
+                    sessionStorage.setItem('currentOrderId', data.order_id);
+                    
+                    // Show alert and redirect to status page
+                    alert("Pembayaran masih pending. Silakan cek status pesanan Anda.");
+                    checkOrderStatus();
                 },
                 onError: function(result) {
                     alert("Terjadi kesalahan saat pembayaran.");
@@ -410,5 +420,224 @@ if (window.location.pathname.endsWith('index.html')) {
         } catch (err) {
             console.error('Error loading cart:', err);
         }
-    } 
+    }
+
+    // Order Status Tracking Functions
+    function showSuccessPage(orderId, paymentResult) {
+        // Generate receipt content
+        generateReceiptContent(orderId);
+        
+        // Show success page
+        document.getElementById('menuPage').classList.remove('active');
+        document.getElementById('checkoutPage').classList.remove('active');
+        document.getElementById('orderStatusPage').classList.remove('active');
+        document.getElementById('successPage').classList.add('active');
+    }
+
+    function generateReceiptContent(orderId) {
+        const receiptDiv = document.getElementById('receiptContent');
+        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+        const now = new Date().toLocaleString('id-ID');
+        
+        receiptDiv.innerHTML = `
+            Order ID: ${orderId}
+            Nama: ${user.nama || '-'}
+            Meja: ${user.meja || '-'}
+            Waktu: ${now}
+            
+            Status: Pembayaran Berhasil
+            Pesanan sedang diproses...
+        `;
+    }    window.checkOrderStatus = function() {
+        const orderId = sessionStorage.getItem('currentOrderId');
+        if (!orderId) {
+            alert('Order ID tidak ditemukan. Silakan pesan kembali.');
+            return;
+        }
+        
+        showOrderStatusPage(orderId);
+    }
+
+    function showOrderStatusPage(orderId) {
+        // Hide other pages
+        document.getElementById('menuPage').classList.remove('active');
+        document.getElementById('checkoutPage').classList.remove('active');
+        document.getElementById('successPage').classList.remove('active');
+        document.getElementById('orderStatusPage').classList.add('active');
+        
+        // Load order status
+        loadOrderStatus(orderId);
+        
+        // Start auto-refresh for status updates (every 30 seconds)
+        startAutoRefresh(orderId);
+    }    async function loadOrderStatus(orderId) {
+        try {
+            showLoading(true);
+            
+            const response = await fetch(`http://localhost:8080/api/order/${orderId}/status`, {
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error('Gagal mengambil status pesanan');
+            }
+            
+            const orderData = await response.json();
+            
+            // Clear payment success flag after first load
+            setTimeout(() => {
+                sessionStorage.removeItem('paymentJustCompleted');
+            }, 3000);
+            
+            displayOrderStatus(orderData);
+            
+        } catch (error) {
+            console.error('Error loading order status:', error);
+            alert('Gagal memuat status pesanan: ' + error.message);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function displayOrderStatus(orderData) {
+        // Update order info
+        document.getElementById('statusOrderId').textContent = orderData.id_order;
+        document.getElementById('statusOrderTotal').textContent = orderData.total_harga;
+        
+        // Update timeline based on status
+        updateStatusTimeline(orderData.status_customer, orderData.status_admin);
+        
+        // Display order items
+        displayOrderItems(orderData.items);
+    }    function updateStatusTimeline(customerStatus, adminStatus) {
+        // Reset all steps (hanya 3 step sekarang)
+        const steps = ['step-success', 'step-process', 'step-completed'];
+        steps.forEach(stepId => {
+            const element = document.getElementById(stepId);
+            element.classList.remove('active', 'completed');
+        });
+        
+        // Check if payment just completed from Midtrans
+        const paymentJustCompleted = sessionStorage.getItem('paymentJustCompleted');
+        
+        // Always start from success step if payment was made
+        if (customerStatus === 'success' || paymentJustCompleted === 'true') {
+            document.getElementById('step-success').classList.add('completed');
+            
+            // Update based on admin status
+            if (adminStatus === 'process') {
+                document.getElementById('step-process').classList.add('active');
+            } else if (adminStatus === 'completed') {
+                document.getElementById('step-process').classList.add('completed');
+                document.getElementById('step-completed').classList.add('active');
+            } else {
+                // Payment success, waiting for admin to process
+                document.getElementById('step-process').classList.add('active');
+            }
+        } else if (customerStatus === 'pending') {
+            // If still pending but came from Midtrans success, treat as success
+            if (paymentJustCompleted === 'true') {
+                document.getElementById('step-success').classList.add('completed');
+                document.getElementById('step-process').classList.add('active');
+            } else {
+                document.getElementById('step-success').classList.add('active');
+            }
+        } else {
+            // Default to first step active
+            document.getElementById('step-success').classList.add('active');
+        }
+    }
+
+    function displayOrderItems(items) {
+        const itemsContainer = document.getElementById('statusOrderItems');
+        
+        if (!items || items.length === 0) {
+            itemsContainer.innerHTML = '<p>Tidak ada item dalam pesanan.</p>';
+            return;
+        }
+        
+        itemsContainer.innerHTML = items.map(item => `
+            <div class="status-order-item">
+                <div class="status-item-info">
+                    <div class="status-item-name">${item.nama_produk || 'Item'}</div>
+                    <div class="status-item-quantity">Jumlah: ${item.jumlah}</div>
+                </div>
+                <div class="status-item-price">Rp ${item.subtotal}</div>
+            </div>
+        `).join('');
+    }
+
+    window.refreshOrderStatus = function() {
+        const orderId = sessionStorage.getItem('currentOrderId');
+        if (orderId) {
+            loadOrderStatus(orderId);
+        }
+    }
+
+    // Auto-refresh functionality
+    let autoRefreshInterval = null;
+      function startAutoRefresh(orderId) {
+        // Clear any existing interval
+        stopAutoRefresh();
+        
+        // Start new interval (refresh every 30 seconds)
+        autoRefreshInterval = setInterval(() => {
+            loadOrderStatus(orderId);
+        }, 30000);
+    }
+    
+    function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+    }
+    
+    // Stop auto-refresh when leaving order status page
+    window.goBackFromStatus = function() {
+        stopAutoRefresh();
+        
+        // Check if we came from success page or have order ID
+        const currentOrderId = sessionStorage.getItem('currentOrderId');
+        
+        if (currentOrderId) {
+            // If we have an order ID, go back to success page instead of menu
+            showSuccessPage(currentOrderId, null);
+        } else {
+            // No order ID, go to menu if user exists
+            const user = sessionStorage.getItem('user');
+            if (user) {
+                showMenuPage();
+            } else {
+                window.location.href = 'login.html';
+            }        }
+    }
+
+    window.goBackToMenu = function() {
+        stopAutoRefresh();
+        sessionStorage.removeItem('currentOrderId');
+        sessionStorage.removeItem('paymentJustCompleted');
+        showMenuPage();
+    }
+
+    window.orderAgain = function() {
+        stopAutoRefresh();
+        sessionStorage.removeItem('currentOrderId');
+        sessionStorage.removeItem('paymentJustCompleted');
+        showMenuPage();
+    }
+
+    function showMenuPage() {
+        document.getElementById('successPage').classList.remove('active');
+        document.getElementById('orderStatusPage').classList.remove('active');
+        document.getElementById('checkoutPage').classList.remove('active');
+        document.getElementById('menuPage').classList.add('active');
+    }    function showLoading(show) {
+        const loadingElement = document.getElementById('loading');
+        if (show) {
+            loadingElement.classList.remove('hidden');
+        } else {
+            loadingElement.classList.add('hidden');
+        }
+    }
 }

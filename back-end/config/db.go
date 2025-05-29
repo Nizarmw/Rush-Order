@@ -65,7 +65,6 @@ func InitDB() {
 	if err := db.AutoMigrate(&models.OrderItem{}); err != nil {
 		log.Fatal("❌ Gagal migrasi OrderItem:", err)
 	}
-
 	fmt.Println("Migrating Pegawai...")
 	if err := db.AutoMigrate(&models.Pegawai{}); err != nil {
 		log.Fatal("❌ Gagal migrasi Pegawai:", err)
@@ -77,4 +76,91 @@ func InitDB() {
 	}
 
 	fmt.Println("Database migrated!")
+
+	// Seed data
+	seedData()
+}
+
+func seedData() {
+	fmt.Println("Starting database seeding...")
+
+	// Seed Pegawai data
+	seedPegawai()
+
+	// Seed Produk data
+	seedProduk()
+
+	fmt.Println("Database seeding completed!")
+}
+
+func seedPegawai() {
+	fmt.Println("Seeding Pegawai data...")
+
+	// Check if pegawai already exists
+	var count int64
+	DB.Model(&models.Pegawai{}).Count(&count)
+	if count > 0 {
+		fmt.Println("Pegawai data already exists, skipping...")
+		return
+	}
+
+	// Create admin pegawai
+	pegawai := models.Pegawai{
+		Username: "admin",
+		Password: "admin123", // In production, this should be hashed
+	}
+
+	if err := DB.Create(&pegawai); err.Error != nil {
+		log.Printf("Error seeding pegawai: %v", err.Error)
+	} else {
+		fmt.Printf("✅ Created pegawai: %s\n", pegawai.Username)
+	}
+}
+
+func seedProduk() {
+	fmt.Println("Seeding Produk data...")
+
+	// Check if produk already exists
+	var count int64
+	DB.Model(&models.Produk{}).Count(&count)
+	if count > 0 {
+		fmt.Println("Produk data already exists, skipping...")
+		return
+	}
+
+	// Create sample products for each category
+	products := []models.Produk{
+		{
+			IDProduk:    "MKN001",
+			NamaProduk:  "Nasi Goreng Special",
+			Deskripsi:   "Nasi goreng dengan telur, ayam, dan sayuran segar",
+			HargaProduk: 25000,
+			ImageURL:    "https://emslvefeidpmppzjxwfl.supabase.co/storage/v1/object/public/rushorder/Nasgor.jpeg",
+			Kategori:    models.KategoriMakanan,
+		},
+		{
+			IDProduk:    "MNM001",
+			NamaProduk:  "Es Teh Manis",
+			Deskripsi:   "Teh manis segar dengan es batu",
+			HargaProduk: 8000,
+			ImageURL:    "https://emslvefeidpmppzjxwfl.supabase.co/storage/v1/object/public/rushorder/Tehes.jpeg",
+			Kategori:    models.KategoriMinuman,
+		},
+		{
+			IDProduk:    "SNK001",
+			NamaProduk:  "Keripik Kentang",
+			Deskripsi:   "Keripik kentang renyah dengan berbagai rasa",
+			HargaProduk: 12000,
+			ImageURL:    "https://emslvefeidpmppzjxwfl.supabase.co/storage/v1/object/public/rushorder/Fries.jpeg",
+			Kategori:    models.KategoriSnack,
+		},
+	}
+
+	for _, product := range products {
+		if err := DB.Create(&product); err.Error != nil {
+			log.Printf("Error seeding produk %s: %v", product.IDProduk, err.Error)
+		} else {
+			fmt.Printf("✅ Created produk: %s - %s (%s)\n", product.IDProduk, product.NamaProduk, product.Kategori)
+		}
+	}
 }

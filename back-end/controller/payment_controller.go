@@ -136,14 +136,13 @@ func GetOrderStatusHandler(c *gin.Context) {
 
 	// Ambil items manual
 	items, _ := service.GetOrderItems(orderID)
-
 	payment, err := service.GetPaymentByOrderID(orderID)
-
 	response := gin.H{
 		"id_order":        order.IDOrder,
 		"id_pemesan":      order.IDPemesan,
 		"total_harga":     order.TotalHarga,
 		"status_customer": order.StatusCustomer,
+		"status_admin":    order.StatusAdmin,
 		"items":           items,
 	}
 
