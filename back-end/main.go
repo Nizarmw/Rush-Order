@@ -35,5 +35,7 @@ func main() {
 	routes.SetupCartRoutes(r)
 	routes.SetupAdminRoutes(r, config.DB)
 	routes.SetupProdukRoutes(r)
+	routes.RegisterPaymentRoutes(r)
+
 	r.Run(":8080")
 }
