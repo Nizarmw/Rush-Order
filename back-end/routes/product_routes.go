@@ -14,6 +14,7 @@ func SetupProdukRoutes(r *gin.Engine) {
 		produkGroup.GET("/:id", controller.GetProdukByID)
 		produkGroup.PUT("/:id", controller.UpdateProduk)
 		produkGroup.DELETE("/:id", controller.DeleteProduk)
+		produkGroup.GET("/kategori", controller.GetProdukByKategori)
 
 		produkGroup.GET("/search", controller.SearchProduk)
 	}

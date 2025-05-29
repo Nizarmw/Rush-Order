@@ -99,6 +99,32 @@ func GetProdukByID(c *gin.Context) {
 	})
 }
 
+func GetProdukByKategori(c *gin.Context) {
+	kategoriParam := c.Param("kategori")
+	kategori := models.KategoriProduk(kategoriParam)
+
+	if !kategori.IsValid() {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":            "Kategori tidak valid, pilih: Makanan, Minuman, atau Snack",
+			"valid_categories": models.GetValidKategoriProduk(),
+		})
+		return
+	}
+
+	produk, err := service.GetProdukByKategori(kategori)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Produk berhasil diambil berdasarkan kategori",
+		"kategori": kategori,
+		"produk":   produk,
+		"count":    len(produk),
+	})
+}
+
 func UpdateProduk(c *gin.Context) {
 	id := c.Param("id")
 

@@ -9,6 +9,9 @@ import (
 )
 
 func CreateProduk(produk models.Produk) error {
+	if !produk.Kategori.IsValid() {
+		return errors.New("kategori produk tidak valid")
+	}
 	if err := config.DB.Create(&produk).Error; err != nil {
 		return errors.New("gagal membuat produk: " + err.Error())
 	}
@@ -53,6 +56,19 @@ func UpdateProduk(id string, produk models.Produk) error {
 		return errors.New("gagal memperbarui produk: " + err.Error())
 	}
 	return nil
+}
+
+func GetProdukByKategori(kategori models.KategoriProduk) ([]models.Produk, error) {
+	if !kategori.IsValid() {
+		return nil, errors.New("kategori tidak valid, pilih: Makanan, Minuman, atau Snack")
+	}
+
+	var produk []models.Produk
+	err := config.DB.Where("kategori = ?", kategori).Find(&produk).Error
+	if err != nil {
+		return nil, errors.New("gagal mengambil produk berdasarkan kategori: " + err.Error())
+	}
+	return produk, nil
 }
 
 func DeleteProduk(id string) error {

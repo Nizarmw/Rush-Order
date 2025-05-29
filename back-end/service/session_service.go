@@ -25,7 +25,6 @@ func InitSessionStore(secretKey string) {
 		MaxAge:   SessionMaxAge,
 		HttpOnly: true,
 		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
 	}
 }
 
