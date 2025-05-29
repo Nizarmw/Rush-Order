@@ -18,7 +18,6 @@ type AdminStatusRequest struct {
 	Status  string `json:"status" binding:"required"`
 }
 
-// CreatePaymentHandler creates payment for existing order
 func CreatePaymentHandler(c *gin.Context) {
 	var req PaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,7 +43,6 @@ func CreatePaymentHandler(c *gin.Context) {
 	})
 }
 
-// CheckoutAndPayHandler creates order from cart and payment
 func CheckoutAndPayHandler(c *gin.Context) {
 	orderID, snapToken, err := service.CreatePaymentFromCart(c.Writer, c.Request)
 	if err != nil {
@@ -67,7 +65,6 @@ func CheckoutAndPayHandler(c *gin.Context) {
 	})
 }
 
-// MidtransWebhookHandler handles Midtrans payment notifications
 func MidtransWebhookHandler(c *gin.Context) {
 	var notif map[string]interface{}
 	if err := c.ShouldBindJSON(&notif); err != nil {
@@ -97,7 +94,6 @@ func MidtransWebhookHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "payment status updated successfully"})
 }
 
-// GetPaymentHandler retrieves payment info by order ID
 func GetPaymentHandler(c *gin.Context) {
 	orderID := c.Param("order_id")
 	if orderID == "" {
@@ -124,7 +120,6 @@ func GetPaymentHandler(c *gin.Context) {
 	})
 }
 
-// GetOrderStatusHandler retrieves order status with payment info for customer
 func GetOrderStatusHandler(c *gin.Context) {
 	orderID := c.Param("order_id")
 	if orderID == "" {
@@ -149,7 +144,6 @@ func GetOrderStatusHandler(c *gin.Context) {
 		"items":           order.Items,
 	}
 
-	// Include payment info if exists
 	if err == nil {
 		response["payment"] = gin.H{
 			"id_payment":     payment.IDPayment,
@@ -166,7 +160,6 @@ func GetOrderStatusHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// UpdateAdminStatusHandler - untuk admin update status order
 func UpdateAdminStatusHandler(c *gin.Context) {
 	var req AdminStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

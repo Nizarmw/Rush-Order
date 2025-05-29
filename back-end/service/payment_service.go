@@ -31,7 +31,6 @@ type SnapResponse struct {
 func CreateSnapToken(orderID string) (*SnapResponse, error) {
 	var order models.Order
 
-	// Ambil order dari DB
 	if err := config.DB.
 		Preload("Items").
 		Where("id_order = ?", orderID).
@@ -39,12 +38,10 @@ func CreateSnapToken(orderID string) (*SnapResponse, error) {
 		return nil, fmt.Errorf("order not found: %v", err)
 	}
 
-	// Cek status order
 	if order.StatusCustomer != models.CustomerStatusPending {
 		return nil, fmt.Errorf("payment already processed for this order")
 	}
 
-	// Inisialisasi Midtrans client
 	midtransClient := midtrans.NewClient()
 	midtransClient.ServerKey = os.Getenv("MIDTRANS_SERVER_KEY")
 	midtransClient.ClientKey = os.Getenv("MIDTRANS_CLIENT_KEY")
@@ -52,7 +49,6 @@ func CreateSnapToken(orderID string) (*SnapResponse, error) {
 
 	snapGateway := midtrans.SnapGateway{Client: midtransClient}
 
-	// Buat request Snap
 	snapReq := &midtrans.SnapReq{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  orderID,
@@ -65,13 +61,10 @@ func CreateSnapToken(orderID string) (*SnapResponse, error) {
 		return nil, fmt.Errorf("failed to create snap token: %v", err)
 	}
 
-	// Buat redirect URL dari token
 	redirectURL := fmt.Sprintf("https://app.sandbox.midtrans.com/snap/v2/vtweb/%s", snapResp.Token)
 
-	// Simpan atau update ke tabel payment
 	var existingPayment models.Payment
 	if err := config.DB.Where("id_order = ?", orderID).First(&existingPayment).Error; err == nil {
-		// update
 		existingPayment.SnapToken = snapResp.Token
 		if err := config.DB.Save(&existingPayment).Error; err != nil {
 			return nil, fmt.Errorf("failed to update payment record: %v", err)
