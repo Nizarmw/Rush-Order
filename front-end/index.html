@@ -225,12 +225,14 @@
                         <div id="statusOrderItems" class="status-order-items">
                             <!-- Order items will be loaded here -->
                         </div>
-                    </div>
-
-                    <div class="status-actions">
+                    </div>                    <div class="status-actions">
                         <button class="btn-secondary" onclick="refreshOrderStatus()">
                             <i class="fas fa-sync-alt"></i>
                             Refresh Status
+                        </button>
+                        <button class="btn-warning" onclick="simulatePaymentSuccess()" style="background-color: #ffa500; margin: 0 10px;">
+                            <i class="fas fa-credit-card"></i>
+                            [DEV] Simulasi Bayar
                         </button>
                         <button class="btn-primary" onclick="goBackToMenu()">
                             <i class="fas fa-home"></i>

@@ -118,14 +118,25 @@ func GetAdminOrders(db *gorm.DB, status string) ([]models.Order, error) {
 	query := db.Model(&models.Order{})
 
 	if status != "" {
-		if status == models.AdminStatusProcess || status == models.AdminStatusCompleted {
+		if status == models.AdminStatusProcess {
+			// Show orders that are either:
+			// 1. Successfully paid and in process status
+			// 2. Pending payment but have payment token (newly created orders)
+			query = query.Where(
+				"(status_admin = ? AND status_customer = ?) OR (status_customer = ? AND EXISTS (SELECT 1 FROM payments WHERE payments.id_order = orders.id_order AND payments.snap_token IS NOT NULL AND payments.snap_token != ''))",
+				status, models.CustomerStatusSuccess, models.CustomerStatusPending,
+			)
+		} else if status == models.AdminStatusCompleted {
 			query = query.Where("status_admin = ? AND status_customer = ?", status, models.CustomerStatusSuccess)
 		} else {
 			return nil, fmt.Errorf("invalid status filter")
 		}
 	} else {
-		// Get all orders that have been paid (success) regardless of admin status
-		query = query.Where("status_customer = ?", models.CustomerStatusSuccess)
+		// Get all orders that have been paid (success) or have payment token
+		query = query.Where(
+			"status_customer = ? OR (status_customer = ? AND EXISTS (SELECT 1 FROM payments WHERE payments.id_order = orders.id_order AND payments.snap_token IS NOT NULL AND payments.snap_token != ''))",
+			models.CustomerStatusSuccess, models.CustomerStatusPending,
+		)
 	}
 
 	if err := query.Order("created_at DESC").Find(&orders).Error; err != nil {

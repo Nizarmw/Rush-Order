@@ -4,8 +4,10 @@ import (
 	"RushOrder/config"
 	"RushOrder/models"
 	"RushOrder/service"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -230,5 +232,40 @@ func GetAdminOrdersHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"orders": response,
 		"count":  len(orders),
+	})
+}
+
+// SimulatePaymentSuccessHandler - untuk development testing
+func SimulatePaymentSuccessHandler(c *gin.Context) {
+	log.Println("--- SimulatePaymentSuccessHandler invoked ---") // New log line
+	orderID := c.Param("order_id")
+	if orderID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "order_id is required"})
+		return
+	}
+
+	// Simulate successful payment
+	transactionID := fmt.Sprintf("SIM_%d", time.Now().Unix())
+	err := service.UpdatePaymentStatus(orderID, transactionID, "settlement")
+	if err != nil {
+		log.Printf("Error simulating payment success: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal simulasi pembayaran"})
+		return
+	}
+
+	// Update admin status to "process"
+	err = service.UpdateAdminStatus(orderID, models.AdminStatusProcess)
+	if err != nil {
+		log.Printf("Error updating admin status after simulating payment: %v", err)
+		// Meskipun gagal update admin status, pembayaran sudah berhasil disimulasikan.
+		// Mungkin perlu penanganan khusus atau cukup log saja, tergantung kebutuhan.
+		// Untuk saat ini, kita tetap kembalikan sukses karena simulasi pembayaran utama berhasil.
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":        "payment simulated successfully and admin status updated to process",
+		"order_id":       orderID,
+		"transaction_id": transactionID,
+		"status":         "success",
 	})
 }

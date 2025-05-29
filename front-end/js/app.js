@@ -276,8 +276,8 @@ if (window.location.pathname.endsWith('index.html')) {
                     // Set flag that payment just completed successfully
                     sessionStorage.setItem('paymentJustCompleted', 'true');
                     
-                    // Show success page
-                    showSuccessPage(data.order_id, result);
+                    // Show order status page directly
+                    showOrderStatusPage(data.order_id);
                 },
                 onPending: function(result) {
                     console.log("Payment Pending:", result);
@@ -303,6 +303,35 @@ if (window.location.pathname.endsWith('index.html')) {
             alert("Terjadi kesalahan saat memproses pembayaran.");
         }
     }   
+
+    // Development helper: Simulate payment success
+    window.simulatePaymentSuccess = async function() {
+        const orderId = sessionStorage.getItem('currentOrderId');
+        if (!orderId) {
+            alert('Tidak ada order yang ditemukan untuk disimulasikan');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/payment/simulate/${orderId}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('Pembayaran berhasil disimulasikan!');
+                sessionStorage.setItem('paymentJustCompleted', 'true');
+                loadOrderStatus(orderId);
+            } else {
+                alert('Gagal simulasi pembayaran: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error simulating payment:', error);
+            alert('Terjadi kesalahan saat simulasi pembayaran');
+        }
+    }
     
 
     window.onload = function () {
