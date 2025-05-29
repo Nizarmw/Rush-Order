@@ -23,20 +23,28 @@ func init() {
 	}
 }
 
-func CreateSnapToken(orderID string) (string, error) {
+type SnapResponse struct {
+	Token       string `json:"token"`
+	RedirectURL string `json:"redirect_url"`
+}
+
+func CreateSnapToken(orderID string) (*SnapResponse, error) {
 	var order models.Order
 
+	// Ambil order dari DB
 	if err := config.DB.
 		Preload("Items").
 		Where("id_order = ?", orderID).
 		First(&order).Error; err != nil {
-		return "", fmt.Errorf("order not found: %v", err)
+		return nil, fmt.Errorf("order not found: %v", err)
 	}
 
+	// Cek status order
 	if order.StatusCustomer != models.CustomerStatusPending {
-		return "", fmt.Errorf("payment already processed for this order")
+		return nil, fmt.Errorf("payment already processed for this order")
 	}
 
+	// Inisialisasi Midtrans client
 	midtransClient := midtrans.NewClient()
 	midtransClient.ServerKey = os.Getenv("MIDTRANS_SERVER_KEY")
 	midtransClient.ClientKey = os.Getenv("MIDTRANS_CLIENT_KEY")
@@ -44,6 +52,7 @@ func CreateSnapToken(orderID string) (string, error) {
 
 	snapGateway := midtrans.SnapGateway{Client: midtransClient}
 
+	// Buat request Snap
 	snapReq := &midtrans.SnapReq{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  orderID,
@@ -53,31 +62,38 @@ func CreateSnapToken(orderID string) (string, error) {
 
 	snapResp, err := snapGateway.GetToken(snapReq)
 	if err != nil {
-		return "", fmt.Errorf("failed to create snap token: %v", err)
+		return nil, fmt.Errorf("failed to create snap token: %v", err)
 	}
 
+	// Buat redirect URL dari token
+	redirectURL := fmt.Sprintf("https://app.sandbox.midtrans.com/snap/v2/vtweb/%s", snapResp.Token)
+
+	// Simpan atau update ke tabel payment
 	var existingPayment models.Payment
 	if err := config.DB.Where("id_order = ?", orderID).First(&existingPayment).Error; err == nil {
+		// update
 		existingPayment.SnapToken = snapResp.Token
 		if err := config.DB.Save(&existingPayment).Error; err != nil {
-			return "", fmt.Errorf("failed to update payment record: %v", err)
+			return nil, fmt.Errorf("failed to update payment record: %v", err)
 		}
-		return snapResp.Token, nil
+	} else {
+		// create
+		payment := models.Payment{
+			IDPayment: fmt.Sprintf("PAY%d", time.Now().Unix()),
+			IDOrder:   orderID,
+			Amount:    order.TotalHarga,
+			SnapToken: snapResp.Token,
+			Status:    models.PaymentStatusPending,
+		}
+		if err := config.DB.Create(&payment).Error; err != nil {
+			return nil, fmt.Errorf("failed to save payment record: %v", err)
+		}
 	}
 
-	payment := models.Payment{
-		IDPayment: fmt.Sprintf("PAY%d", time.Now().Unix()),
-		IDOrder:   orderID,
-		Amount:    order.TotalHarga,
-		SnapToken: snapResp.Token,
-		Status:    models.PaymentStatusPending,
-	}
-
-	if err := config.DB.Create(&payment).Error; err != nil {
-		return "", fmt.Errorf("failed to save payment record: %v", err)
-	}
-
-	return snapResp.Token, nil
+	return &SnapResponse{
+		Token:       snapResp.Token,
+		RedirectURL: redirectURL,
+	}, nil
 }
 
 func UpdatePaymentStatus(orderID, transactionID, midtransStatus string) error {
@@ -122,9 +138,9 @@ func UpdatePaymentStatus(orderID, transactionID, midtransStatus string) error {
 	}
 
 	if customerStatus == models.CustomerStatusSuccess {
-		updateData["status_admin"] = models.AdminStatusProcess 
+		updateData["status_admin"] = models.AdminStatusProcess
 	} else {
-		updateData["status_admin"] = "" 
+		updateData["status_admin"] = ""
 	}
 
 	if err := tx.Model(&order).Updates(updateData).Error; err != nil {
@@ -184,12 +200,12 @@ func CreatePaymentFromCart(w http.ResponseWriter, r *http.Request) (string, stri
 		return "", "", fmt.Errorf("failed to checkout cart: %v", err)
 	}
 
-	snapToken, err := CreateSnapToken(orderID)
+	snapResp, err := CreateSnapToken(orderID)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create payment: %v", err)
 	}
 
-	return orderID, snapToken, nil
+	return orderID, snapResp.RedirectURL, nil
 }
 
 func GetOrderStatus(orderID string) (*models.Order, error) {
