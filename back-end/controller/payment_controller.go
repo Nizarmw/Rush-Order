@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"RushOrder/config"
 	"RushOrder/models"
 	"RushOrder/service"
 	"fmt"
@@ -198,74 +197,42 @@ func UpdateAdminStatusHandler(c *gin.Context) {
 	})
 }
 
-// GetAdminOrdersHandler retrieves orders for admin dashboard
-func GetAdminOrdersHandler(c *gin.Context) {
-	// Get optional status filter from query parameter
-	status := c.Query("status")
-	// Validate status if provided
-	if status != "" && status != models.AdminStatusProcess && status != models.AdminStatusCompleted {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid status filter"})
-		return
-	}
-
-	orders, err := service.GetAdminOrders(config.DB, status)
-	if err != nil {
-		log.Printf("Error getting admin orders: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal mengambil data order"})
-		return
-	}
-
-	response := make([]gin.H, len(orders))
-	for i, order := range orders {
-		items, _ := service.GetOrderItems(order.IDOrder)
-		response[i] = gin.H{
-			"id_order":        order.IDOrder,
-			"id_pemesan":      order.IDPemesan,
-			"total_harga":     order.TotalHarga,
-			"status_customer": order.StatusCustomer,
-			"status_admin":    order.StatusAdmin,
-			"items":           items,
-			"created_at":      order.CreatedAt,
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"orders": response,
-		"count":  len(orders),
-	})
-}
-
 // SimulatePaymentSuccessHandler - untuk development testing
 func SimulatePaymentSuccessHandler(c *gin.Context) {
-	log.Println("--- SimulatePaymentSuccessHandler invoked ---") // New log line
+	log.Println("--- SimulatePaymentSuccessHandler invoked (restored to full simulation) ---")
 	orderID := c.Param("order_id")
 	if orderID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "order_id is required"})
 		return
 	}
 
-	// Simulate successful payment
+	// Simulate successful payment ("settlement")
 	transactionID := fmt.Sprintf("SIM_%d", time.Now().Unix())
-	err := service.UpdatePaymentStatus(orderID, transactionID, "settlement")
+	err := service.UpdatePaymentStatus(orderID, transactionID, "settlement") // This sets customer_status to 'success' and admin_status to 'pending' or 'process'
 	if err != nil {
-		log.Printf("Error simulating payment success: %v", err)
+		log.Printf("Error simulating payment success for order %s: %v", orderID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal simulasi pembayaran"})
 		return
 	}
 
-	// Update admin status to "process"
+	// Explicitly update admin status to "process" to ensure it's ready for admin completion
+	// This is helpful if UpdatePaymentStatus only sets it to 'pending'
 	err = service.UpdateAdminStatus(orderID, models.AdminStatusProcess)
 	if err != nil {
-		log.Printf("Error updating admin status after simulating payment: %v", err)
-		// Meskipun gagal update admin status, pembayaran sudah berhasil disimulasikan.
-		// Mungkin perlu penanganan khusus atau cukup log saja, tergantung kebutuhan.
-		// Untuk saat ini, kita tetap kembalikan sukses karena simulasi pembayaran utama berhasil.
+		log.Printf("Error updating admin status to 'process' after simulating payment for order %s: %v", orderID, err)
+		// If this fails, it might be because customer payment wasn't seen as completed by UpdateAdminStatus,
+		// or order was already processed/completed.
+		// We'll still return a success for the simulation part, but log this error.
 	}
 
+	log.Printf("Payment simulated as 'settlement' and admin status set to 'process' for order %s.", orderID)
 	c.JSON(http.StatusOK, gin.H{
-		"message":        "payment simulated successfully and admin status updated to process",
+		"message":        "Payment simulated successfully, and order is set to 'process' for admin.",
 		"order_id":       orderID,
 		"transaction_id": transactionID,
-		"status":         "success",
+		"status_after_simulation": gin.H{
+			"customer": "success",
+			"admin":    models.AdminStatusProcess,
+		},
 	})
 }

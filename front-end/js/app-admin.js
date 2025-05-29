@@ -247,7 +247,7 @@ if (window.location.pathname.endsWith('index.html')) {
                     </h5>
                     <div class="items-list">
                         ${order.items ? order.items.slice(0, 3).map(item => 
-                            `<span class="item-tag">${item.nama_produk} x${item.quantity}</span>`
+                            `<span class="item-tag">${item.nama_produk} x${item.jumlah}</span>` // Changed item.quantity to item.jumlah
                         ).join('') : ''}
                         ${totalItems > 3 ? `<span class="item-tag more">+${totalItems - 3} lainnya</span>` : ''}
                     </div>
@@ -345,8 +345,8 @@ if (window.location.pathname.endsWith('index.html')) {
                         ${orderData.items ? orderData.items.map(item => `
                             <div class="item-detail">
                                 <span>${item.nama_produk}</span>
-                                <span>x${item.quantity}</span>
-                                <span>Rp ${formatCurrency(item.harga * item.quantity)}</span>
+                                <span>x${item.jumlah}</span> 
+                                <span>Rp ${formatCurrency(item.harga_produk * item.jumlah)}</span> 
                             </div>
                         `).join('') : '<p>Tidak ada item</p>'}
                     </div>

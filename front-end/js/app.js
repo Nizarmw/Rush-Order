@@ -276,8 +276,8 @@ if (window.location.pathname.endsWith('index.html')) {
                     // Set flag that payment just completed successfully
                     sessionStorage.setItem('paymentJustCompleted', 'true');
                     
-                    // Show order status page directly
-                    showOrderStatusPage(data.order_id);
+                    // Show success page first
+                    showSuccessPage(data.order_id, result);
                 },
                 onPending: function(result) {
                     console.log("Payment Pending:", result);
@@ -303,7 +303,7 @@ if (window.location.pathname.endsWith('index.html')) {
             alert("Terjadi kesalahan saat memproses pembayaran.");
         }
     }   
-
+    
     // Development helper: Simulate payment success
     window.simulatePaymentSuccess = async function() {
         const orderId = sessionStorage.getItem('currentOrderId');
@@ -318,14 +318,15 @@ if (window.location.pathname.endsWith('index.html')) {
                 credentials: 'include'
             });
 
-            const result = await response.json();
+            const resultData = await response.json(); // Renamed to avoid conflict with 'result' in outer scope
 
             if (response.ok) {
                 alert('Pembayaran berhasil disimulasikan!');
                 sessionStorage.setItem('paymentJustCompleted', 'true');
-                loadOrderStatus(orderId);
+                // Go to the order status page after simulation
+                showOrderStatusPage(orderId); 
             } else {
-                alert('Gagal simulasi pembayaran: ' + (result.error || 'Unknown error'));
+                alert('Gagal simulasi pembayaran: ' + (resultData.error || 'Unknown error'));
             }
         } catch (error) {
             console.error('Error simulating payment:', error);
@@ -339,20 +340,48 @@ if (window.location.pathname.endsWith('index.html')) {
         if (!sess) {
             window.location.href = "login.html";
         } else {
+            const userData = JSON.parse(sess); // Parse the session data
+            // Display customer name and table number
+            const customerNameElement = document.getElementById('customerName');
+            const tableNumberElement = document.getElementById('tableNumber');
+
+            if (customerNameElement && userData.nama) {
+                customerNameElement.textContent = userData.nama;
+            }
+            if (tableNumberElement && userData.meja) {
+                tableNumberElement.textContent = userData.meja;
+            }
+
             showProduk();
+            loadCart(); // Load cart on page load
 
             document.getElementById('checkoutBtn').addEventListener('click', paymentMidtrans)
 
+            // Fetch session from backend to ensure it's up-to-date (optional, but good practice)
             fetch('http://localhost:8080/api/sessions/', {
                 credentials: 'include'
             })
-            .then(res => res.json())
-            .then(userData => {
-                console.log(userData)
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch session from backend');
+                return res.json();
+            })
+            .then(backendUserData => {
+                console.log("Backend session data:", backendUserData);
+                // Optionally update sessionStorage and UI again if backend data is different
+                // This can be useful if the session could be modified by other tabs/actions
+                sessionStorage.setItem('user', JSON.stringify(backendUserData)); 
+                if (customerNameElement && backendUserData.nama) {
+                    customerNameElement.textContent = backendUserData.nama;
+                }
+                if (tableNumberElement && backendUserData.meja) {
+                    tableNumberElement.textContent = backendUserData.meja;
+                }
+                // Re-load cart if session was updated, as cart data might be tied to session on backend
+                loadCart(); 
             })
             .catch(err => {
-                console.error("Gagal fetch session user:", err);
-                showAlert("Item ditambahkan, tapi gagal update session", "warning");
+                console.error("Gagal fetch session user dari backend:", err);
+                // showAlert("Gagal sinkronisasi session dengan server", "warning"); // Consider if this alert is too intrusive
             });
         }
     }
