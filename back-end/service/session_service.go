@@ -4,19 +4,28 @@ import (
 	"RushOrder/session"
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/sessions"
+	"github.com/joho/godotenv"
 )
 
 var (
-	Store *sessions.CookieStore
+	Store      *sessions.CookieStore
+	SessionKey string
 )
 
 const (
 	SessionName   = "customer_session"
 	SessionMaxAge = 3600 * 2
-	SessionKey    = "customer_data"
 )
+
+func init() {
+	if err := godotenv.Load("../.env"); err != nil {
+		panic("Error loading .env file")
+	}
+	SessionKey = os.Getenv("SESSION_KEY")
+}
 
 func InitSessionStore(secretKey string) {
 	Store = sessions.NewCookieStore([]byte(secretKey))

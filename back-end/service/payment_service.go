@@ -16,7 +16,6 @@ import (
 func init() {
 	if err := godotenv.Load("../.env"); err != nil {
 		log.Printf("Warning: Error loading .env file: %v", err)
-		// Try alternative paths
 		if err := godotenv.Load(".env"); err != nil {
 			log.Printf("Warning: Error loading .env file from current directory: %v", err)
 		}
@@ -73,7 +72,6 @@ func CreateSnapToken(orderID string) (*SnapResponse, error) {
 			return nil, fmt.Errorf("failed to update payment record: %v", err)
 		}
 	} else {
-		// create
 		payment := models.Payment{
 			IDPayment: fmt.Sprintf("PAY%d", time.Now().Unix()),
 			IDOrder:   orderID,

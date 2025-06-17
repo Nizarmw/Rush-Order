@@ -36,7 +36,6 @@ func InitDB() {
 		if err == nil {
 			break
 		}
-		log.Printf("Retrying database connection (%d/10)...", i+1)
 		time.Sleep(5 * time.Second)
 	}
 
@@ -83,28 +82,19 @@ func InitDB() {
 }
 
 func seedData() {
-	fmt.Println("Starting database seeding...")
-
 	seedPegawai()
-
 	seedProduk()
-
-	fmt.Println("Database seeding completed!")
 }
 
 func seedPegawai() {
-	fmt.Println("Seeding Pegawai data...")
-
 	var count int64
 	DB.Model(&models.Pegawai{}).Count(&count)
 	if count > 0 {
-		fmt.Println("Pegawai data already exists, skipping...")
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("Error hashing password: %v", err)
 		return
 	}
 
@@ -114,9 +104,7 @@ func seedPegawai() {
 	}
 
 	if err := DB.Create(&pegawai); err.Error != nil {
-		log.Printf("Error seeding pegawai: %v", err.Error)
 	} else {
-		fmt.Printf("Created pegawai: %s\n", pegawai.Username)
 	}
 }
 
